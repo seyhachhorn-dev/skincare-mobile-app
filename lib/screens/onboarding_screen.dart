@@ -20,7 +20,7 @@ class OnboardingScreen extends StatelessWidget {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(24),
                   child: Image.asset(
-                    'assets/images/onboarding1.jpg',
+                    'assets/images/onborading5.png',
                     width: double.infinity,
                     fit: BoxFit.cover,
                   ),

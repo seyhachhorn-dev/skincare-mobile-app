@@ -105,6 +105,7 @@ class LoginScreen extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: () {
                     // later: call login API
+                    Navigator.pushReplacementNamed(context, "/favorite");
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
@@ -154,7 +155,7 @@ class LoginScreen extends StatelessWidget {
                 style: TextStyle(color: AppColors.textGrey),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
 
               // SOCIAL ICONS
               Row(
