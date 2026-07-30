@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:skincare_app/constant/app_colors.dart';
+import 'package:skincare_app/screens/favorithcategory_screen.dart';
 import 'package:skincare_app/screens/login_screen.dart';
 import 'package:skincare_app/screens/splash_screen.dart';
 import 'package:skincare_app/screens/onboarding_screen.dart';

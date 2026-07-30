@@ -160,11 +160,9 @@ class LoginScreen extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: const [
-                  _SocialCircle(icon: Icons.g_mobiledata),
+                  _SocialCircle('assets/icons/google.png'),
                   SizedBox(width: 20),
-                  _SocialCircle(icon: Icons.apple),
-                  SizedBox(width: 20),
-                  _SocialCircle(icon: Icons.facebook),
+                  _SocialCircle('assets/icons/facebook.png'),
                 ],
               ),
 
@@ -180,8 +178,9 @@ class LoginScreen extends StatelessWidget {
 
 // Small reusable widget for one social login circle
 class _SocialCircle extends StatelessWidget {
-  final IconData icon;
-  const _SocialCircle({required this.icon});
+  final String imagePath;
+
+  const _SocialCircle(this.imagePath, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -189,10 +188,13 @@ class _SocialCircle extends StatelessWidget {
       width: 50,
       height: 50,
       decoration: const BoxDecoration(
-        color: Colors.white,
         shape: BoxShape.circle,
+        color: Colors.white,
       ),
-      child: Icon(icon, size: 28),
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Image.asset(imagePath),
+      ),
     );
   }
 }
