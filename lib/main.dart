@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
         '/': (context) => const SplashScreen(),
         '/onboarding': (context) => const OnboardingScreen(),
         '/login': (context) => const LoginScreen(),
-        '/favorite': (context) => const CategoryScreen(),
+        '/favorite': (context) => const FavoriteCategory(),
       },
      //call page to display here
     );

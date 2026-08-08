@@ -1,5 +1,5 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:skincare_app/components/skipbutton.dart';
 import 'package:skincare_app/constant/app_colors.dart';
 import 'package:skincare_app/constant/app_string.dart';
 
@@ -11,7 +11,6 @@ class FavoriteCategory extends StatefulWidget {
 }
 
 class _FavoriteCategoryState extends State<FavoriteCategory> {
-  // The list of all categories with their emoji icon
   final List<Map<String, String>> categories = [
     {"icon": "🧴", "name": "Show All"},
     {"icon": "🌸", "name": "Perfume"},
@@ -25,7 +24,6 @@ class _FavoriteCategoryState extends State<FavoriteCategory> {
     {"icon": "🪮", "name": "Tools"},
   ];
 
-  // Keeps track of which categories the user tapped
   final Set<String> selected = {};
 
   @override
@@ -50,32 +48,104 @@ class _FavoriteCategoryState extends State<FavoriteCategory> {
                 ),
               ),
               const SizedBox(height: 12),
-              Column(
-                children: [
-                  const Text(
-                    AppString.chooseSub,
-                    style: TextStyle(fontSize: 15, color: AppColors.textGrey),
-                  ),
-                  const SizedBox(height: 32),
 
-                  // CATEGORY CHIPS (2 per row)
-                  Wrap(
-                    spacing: 16, // for horizental
-                    runSpacing: 16, //for vertical gap
-                     
-                    alignment: WrapAlignment.center,
-                    children: categories.map((category) {
-                      final name = category["name"]!;
-                      final icon = category["icon"]!;
-                      final isSelected = selected.contains(name);
-                      return GestureDetector(
-                        onTap: () {},
-                        child: const SizedBox(),
-                      );
-                    }).toList(),
-                  ),
-                ],
+              const Text(
+                AppString.chooseSub,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 15, color: AppColors.textGrey),
               ),
+              const SizedBox(height: 32),
+
+              // CATEGORY CHIPS (2 per row)
+              Wrap(
+                spacing: 16, // for horizental
+                runSpacing: 16, //for vertical gap
+                alignment: WrapAlignment.center,
+                children: categories.map((category) {
+                  final name = category["name"]!;
+                  final icon = category["icon"]!;
+                  final isSelected = selected.contains(name);
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        if (isSelected) {
+                          selected.remove(name);
+                        } else {
+                          selected.add(name);
+                        }
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 14,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected ? AppColors.accent : Colors.white,
+                        borderRadius: BorderRadius.circular(30),
+                        border: Border.all(
+                          color: isSelected
+                              ? AppColors.accent
+                              : Colors.grey.shade300,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            icon,
+                            style: const TextStyle(fontSize: 20),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            name,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: isSelected
+                                  ? Colors.white
+                                  : AppColors.textDark,
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+
+              const Spacer(),
+
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/home');
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.accent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(28),
+                    ),
+                  ),
+                  child: const Text(
+                    AppString.continueBtn,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              SkipButton(
+                onTap: () {
+                  Navigator.pushNamed(context, '/home');
+                },
+              ),
+
+              const SizedBox(height: 20),
             ],
           ),
         ),
