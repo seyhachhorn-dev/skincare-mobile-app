@@ -1,3 +1,6 @@
+#Credentails
+*.jks
+.env
 # Miscellaneous
 *.class
 *.log
