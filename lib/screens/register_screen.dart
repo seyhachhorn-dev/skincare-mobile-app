@@ -23,7 +23,7 @@ class RegisterScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textDark,
+                  color: Color.fromARGB(255, 231, 95, 118),
                 ),
               ),
 
@@ -31,7 +31,7 @@ class RegisterScreen extends StatelessWidget {
 
               // WELCOME TITLE
               const Text(
-                AppString.welcome,
+                "Create an Account",
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w600,
@@ -42,7 +42,7 @@ class RegisterScreen extends StatelessWidget {
               const SizedBox(height: 8),
 
               const Text(
-                AppString.welcomeSub,
+                "Sign up to continue your journey.",
                 style: TextStyle(
                   fontSize: 14,
                   color: AppColors.textGrey,
@@ -64,6 +64,9 @@ class RegisterScreen extends StatelessWidget {
                   ),
                 ),
               ),
+
+            const SizedBox(height: 16),
+
 
               // EMAIL FIELD
               TextField(
@@ -96,9 +99,29 @@ class RegisterScreen extends StatelessWidget {
                 ),
               ),
 
+
+              
+              const SizedBox(height: 16),
+
+              // PASSWORD FIELD
+              TextField(
+                obscureText: true, // hides the password
+                decoration: InputDecoration(
+                  hintText: "Confirm Password",
+                  prefixIcon: const Icon(Icons.key_outlined),
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+
+
               const SizedBox(height: 8),
 
-              // SIGN IN BUTTON
+              // SIGN Up BUTTON
               SizedBox(
                 width: double.infinity,
                 height: 56,
@@ -113,7 +136,7 @@ class RegisterScreen extends StatelessWidget {
                     ),
                   ),
                   child: const Text(
-                    AppString.signIn,
+                    "Sign Up",
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.white,
@@ -129,13 +152,15 @@ class RegisterScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Text(
-                    AppString.noAccount,
+                    "Login instead? ",
                     style: TextStyle(color: AppColors.textGrey),
                   ),
                   GestureDetector(
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.pushReplacementNamed(context, "/login");
+                    },
                     child: const Text(
-                      AppString.createOne,
+                      "Login here",
                       style: TextStyle(
                         color: AppColors.textDark,
                         fontWeight: FontWeight.w600,
