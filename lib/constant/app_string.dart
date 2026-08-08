@@ -41,4 +41,35 @@ static const String productCollections = "Product collections";
   static const String details = "Details";
   static const String shippingReturns = "Shipping & Returns";
   static const String addToBasket = "Add to Basket";
+
+  // Shopping cart
+  static const String shoppingCart = "Shopping Cart";
+  static const String addCouponCode = "Add coupon code";
+  static const String total = "Total:";
+  static const String freeShipping = "Free shipping";
+  static const String proceedToCheckout = "Proceed to Checkout";
+  static const String emptyCart = "Your bag is empty";
+  static const String emptyCartSub = "Items you add to your bag will show up here.";
+
+  // Checkout
+  static const String checkoutTitle = "Checkout";
+  static const String shippingInformation = "Shipping information";
+  static const String edit = "Edit";
+  static const String paymentMethod = "Payment method";
+  static const String addACard = "Add a card";
+  static const String shippingMethod = "Shipping method";
+  static const String placeAnOrder = "Place an order";
+  static const String checkoutNote =
+      "Please note that all orders are typically processed within 1-2 business days. "
+      "Once your order has been processed and shipped, you will receive a confirmation "
+      "email with tracking information.";
+
+  // Thank you / order confirmation
+  static const String thankYouTitle = "Thank you for shopping with us!";
+  static const String needAssistance =
+      "Need assistance? We're here for you! If you have any questions or need support "
+      "regarding your purchase, reach out to our Customer ";
+  static const String support = "Support.";
+  static const String orderDetailsBtn = "Order Details";
+  static const String doneBtn = "Done";
 }

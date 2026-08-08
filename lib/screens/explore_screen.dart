@@ -4,6 +4,7 @@ import 'package:skincare_app/constant/app_icons.dart';
 import 'package:skincare_app/constant/app_string.dart';
 import 'package:skincare_app/model/product.dart';
 import 'package:skincare_app/screens/product_detail_screen.dart';
+import 'package:skincare_app/widgets/app_bottom_nav.dart';
 import 'package:skincare_app/widgets/svg_icon.dart';
 
 class ExploreScreen extends StatefulWidget {
@@ -100,7 +101,19 @@ class _ExploreScreenState extends State<ExploreScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNav(),
+      bottomNavigationBar: AppBottomNav(
+        currentIndex: currentTab,
+        onTap: (index) {
+          setState(() => currentTab = index);
+          if (index == 0) {
+            Navigator.pushReplacementNamed(context, '/home');
+          } else if (index == 3) {
+            Navigator.pushNamed(context, '/cart');
+          } else if (index == 4) {
+            Navigator.pushNamed(context, '/profile');
+          }
+        },
+      ),
     );
   }
 
@@ -339,36 +352,4 @@ class _ExploreScreenState extends State<ExploreScreen> {
     );
   }
 
-  // ---------- BOTTOM NAV ----------
-  Widget _buildBottomNav() {
-    return BottomNavigationBar(
-      currentIndex: currentTab,
-      onTap: (index) {
-        setState(() => currentTab = index);
-        if (index == 0) {
-          Navigator.pushReplacementNamed(context, '/home');
-        } else if (index == 4) {
-          Navigator.pushNamed(context, '/profile');
-        }
-      },
-      selectedItemColor: AppColors.accent,
-      unselectedItemColor: AppColors.textGrey,
-      type: BottomNavigationBarType.fixed,
-      items: [
-        _navItem(AppIcons.home, "Home"),
-        _navItem(AppIcons.explore, "Explore"),
-        _navItem(AppIcons.heart, "Saved"),
-        _navItem(AppIcons.bag, "Bag"),
-        _navItem(AppIcons.profile, "Profile"),
-      ],
-    );
-  }
-
-  BottomNavigationBarItem _navItem(String asset, String label) {
-    return BottomNavigationBarItem(
-      icon: SvgIcon(asset, color: AppColors.textGrey),
-      activeIcon: SvgIcon(asset, color: AppColors.accent),
-      label: label,
-    );
-  }
 }

@@ -3,6 +3,7 @@ import 'package:skincare_app/constant/app_colors.dart';
 import 'package:skincare_app/constant/app_icons.dart';
 import 'package:skincare_app/constant/app_string.dart';
 import 'package:skincare_app/model/product.dart';
+import 'package:skincare_app/services/cart_service.dart';
 import 'package:skincare_app/widgets/svg_icon.dart';
 
 /// Full-screen product detail page — works for any [Product] passed to it.
@@ -328,7 +329,17 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           child: SizedBox(
             height: 40,
             child: ElevatedButton.icon(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () {
+                CartService.instance.addToCart(widget.product, quantity: _quantity);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("${widget.product.name} added to your bag"),
+                    behavior: SnackBarBehavior.floating,
+                    backgroundColor: AppColors.textDark,
+                  ),
+                );
+                Navigator.pop(context);
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryLight,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
