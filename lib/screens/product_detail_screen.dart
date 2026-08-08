@@ -4,6 +4,7 @@ import 'package:skincare_app/constant/app_icons.dart';
 import 'package:skincare_app/constant/app_string.dart';
 import 'package:skincare_app/model/product.dart';
 import 'package:skincare_app/services/cart_service.dart';
+import 'package:skincare_app/services/favorites_service.dart';
 import 'package:skincare_app/widgets/svg_icon.dart';
 
 /// Full-screen product detail page — works for any [Product] passed to it.
@@ -19,7 +20,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   final PageController _imageController = PageController();
   int _imageIndex = 0;
   int _quantity = 1;
-  bool _isFavorite = false;
   bool _detailsExpanded = false;
   bool _shippingExpanded = false;
 
@@ -308,19 +308,21 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     return Row(
       children: [
         InkWell(
-          onTap: () => setState(() => _isFavorite = !_isFavorite),
+          onTap: () => FavoritesService.instance.toggle(widget.product),
           customBorder: const CircleBorder(),
           child: Container(
             width: 35,
             height: 35,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              // border: Border.all(color: AppColors.border),
-            ),
-            child: SvgIcon(
-              AppIcons.heart,
-              color: _isFavorite ? AppColors.accent : AppColors.textGrey,
-              size: 35,
+            decoration: const BoxDecoration(shape: BoxShape.circle),
+            child: ListenableBuilder(
+              listenable: FavoritesService.instance,
+              builder: (context, _) => SvgIcon(
+                AppIcons.heart,
+                color: FavoritesService.instance.isSaved(widget.product)
+                    ? AppColors.accent
+                    : AppColors.textGrey,
+                size: 35,
+              ),
             ),
           ),
         ),

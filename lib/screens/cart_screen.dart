@@ -60,6 +60,8 @@ class _CartScreenState extends State<CartScreen> {
             Navigator.pushReplacementNamed(context, '/home');
           } else if (index == 1) {
             Navigator.pushNamed(context, '/explore');
+          } else if (index == 2) {
+            Navigator.pushNamed(context, '/saved');
           } else if (index == 4) {
             Navigator.pushNamed(context, '/profile');
           }

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:skincare_app/constant/app_colors.dart';
 import 'package:skincare_app/constant/app_string.dart';
 
-class LoginScreen extends StatelessWidget {
-  const LoginScreen({super.key});
+class RegisterScreen extends StatelessWidget {
+  const RegisterScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +51,20 @@ class LoginScreen extends StatelessWidget {
 
               const SizedBox(height: 32),
 
+              // Name FIELD
+              TextField(
+                decoration: InputDecoration(
+                  hintText: AppString.name,
+                  prefixIcon: const Icon(Icons.person_outline),
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+
               // EMAIL FIELD
               TextField(
                 decoration: InputDecoration(
@@ -84,28 +98,13 @@ class LoginScreen extends StatelessWidget {
 
               const SizedBox(height: 8),
 
-              // FORGOT PASSWORD
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {},
-                  child: const Text(
-                    AppString.forgotPass,
-                    style: TextStyle(color: AppColors.textGrey),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
               // SIGN IN BUTTON
               SizedBox(
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
                   onPressed: () {
-                    // later: call login API
-                    Navigator.pushReplacementNamed(context, "/favorite");
+                    // later: call register API
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
@@ -134,9 +133,7 @@ class LoginScreen extends StatelessWidget {
                     style: TextStyle(color: AppColors.textGrey),
                   ),
                   GestureDetector(
-                    onTap: () {
-                      Navigator.pushReplacementNamed(context, "/register");
-                    },
+                    onTap: () {},
                     child: const Text(
                       AppString.createOne,
                       style: TextStyle(
@@ -151,9 +148,9 @@ class LoginScreen extends StatelessWidget {
 
               const SizedBox(height: 32),
 
-              // OR SIGN IN WITH
+              // OR SIGN Up WITH
               const Text(
-                AppString.orSignIn,
+                "Or sign up with",
                 style: TextStyle(color: AppColors.textGrey),
               ),
 

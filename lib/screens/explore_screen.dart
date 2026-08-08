@@ -4,6 +4,8 @@ import 'package:skincare_app/constant/app_icons.dart';
 import 'package:skincare_app/constant/app_string.dart';
 import 'package:skincare_app/model/product.dart';
 import 'package:skincare_app/screens/product_detail_screen.dart';
+import 'package:skincare_app/services/cart_service.dart';
+import 'package:skincare_app/services/favorites_service.dart';
 import 'package:skincare_app/widgets/app_bottom_nav.dart';
 import 'package:skincare_app/widgets/svg_icon.dart';
 
@@ -34,6 +36,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
   // Fake products for now — later this comes from your API
   final List<Product> products = [
     Product(
+      id: "explore-1",
       name: "Granactive Retinoid 5%",
       description: "This water-free solution contains a 5% concentration of retinoid.",
       price: 699,
@@ -42,6 +45,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
       size: "30 ml",
     ),
     Product(
+      id: "explore-2",
       name: "Niacinamide 10% + Zinc",
       description: "A high-strength vitamin and mineral blemish formula.",
       price: 549,
@@ -50,6 +54,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
       size: "30 ml",
     ),
     Product(
+      id: "explore-3",
       name: "Hyaluronic Acid 2% + B5",
       description: "A hydration support formula with ultra-pure hyaluronic acid.",
       price: 629,
@@ -58,6 +63,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
       size: "30 ml",
     ),
     Product(
+      id: "explore-4",
       name: "Buffet + Copper Peptides",
       description: "Multi-technology peptide serum for visible signs of aging.",
       price: 899,
@@ -66,6 +72,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
       size: "30 ml",
     ),
     Product(
+      id: "explore-5",
       name: "Granactive Retinoid 2%",
       description: "A lighter-strength water-free solution with 2% retinoid.",
       price: 599,
@@ -74,6 +81,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
       size: "30 ml",
     ),
     Product(
+      id: "explore-6",
       name: "Ascorbyl Glucoside 12%",
       description: "A stable vitamin C solution to brighten and even skin tone.",
       price: 749,
@@ -107,6 +115,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
           setState(() => currentTab = index);
           if (index == 0) {
             Navigator.pushReplacementNamed(context, '/home');
+          } else if (index == 2) {
+            Navigator.pushNamed(context, '/saved');
           } else if (index == 3) {
             Navigator.pushNamed(context, '/cart');
           } else if (index == 4) {
@@ -246,6 +256,18 @@ class _ExploreScreenState extends State<ExploreScreen> {
     );
   }
 
+  // ---------- ADD TO CART (quick-add from the product card) ----------
+  void _addToCart(Product product) {
+    CartService.instance.addToCart(product);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("${product.name} added to your bag"),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: AppColors.textDark,
+      ),
+    );
+  }
+
   // ---------- PRODUCT GRID ----------
   Widget _buildProductGrid() {
     return SliverGrid(
@@ -294,13 +316,25 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   Positioned(
                     top: 8,
                     left: 8,
-                    child: Container(
-                      padding: const EdgeInsets.all(5),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
+                    child: GestureDetector(
+                      onTap: () => FavoritesService.instance.toggle(product),
+                      child: Container(
+                        padding: const EdgeInsets.all(5),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: ListenableBuilder(
+                          listenable: FavoritesService.instance,
+                          builder: (context, _) => SvgIcon(
+                            AppIcons.heart,
+                            color: FavoritesService.instance.isSaved(product)
+                                ? AppColors.accent
+                                : AppColors.textGrey,
+                            size: 14,
+                          ),
+                        ),
                       ),
-                      child: SvgIcon(AppIcons.heart, color: AppColors.accent, size: 14),
                     ),
                   ),
                 ],
@@ -333,13 +367,16 @@ class _ExploreScreenState extends State<ExploreScreen> {
                           color: AppColors.textDark,
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: const BoxDecoration(
-                          color: AppColors.accent,
-                          shape: BoxShape.circle,
+                      GestureDetector(
+                        onTap: () => _addToCart(product),
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: const BoxDecoration(
+                            color: AppColors.accent,
+                            shape: BoxShape.circle,
+                          ),
+                          child: SvgIcon(AppIcons.bag, color: Colors.white, size: 14),
                         ),
-                        child: SvgIcon(AppIcons.bag, color: Colors.white, size: 14),
                       ),
                     ],
                   ),

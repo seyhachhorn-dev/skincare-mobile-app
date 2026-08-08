@@ -6,6 +6,8 @@ import 'package:skincare_app/screens/favorithcategory_screen.dart';
 import 'package:skincare_app/screens/home_screen.dart';
 import 'package:skincare_app/screens/login_screen.dart';
 import 'package:skincare_app/screens/profile_screen.dart';
+import 'package:skincare_app/screens/register_screen.dart';
+import 'package:skincare_app/screens/saved_screen.dart';
 import 'package:skincare_app/screens/splash_screen.dart';
 import 'package:skincare_app/screens/onboarding_screen.dart';
 
@@ -27,11 +29,13 @@ class MyApp extends StatelessWidget {
         '/': (context) => const SplashScreen(),
         '/onboarding': (context) => const OnboardingScreen(),
         '/login': (context) => const LoginScreen(),
+        '/register': (context) => const RegisterScreen(),
         '/favorite': (context) => const FavoriteCategory(),
         '/home': (context) => const HomeScreen(),
         '/profile': (context) => const ProfileScreen(),
         '/explore': (context) => const ExploreScreen(),
         '/cart': (context) => const CartScreen(),
+        '/saved': (context) => const SavedScreen(),
       },
      //call page to display here
     );

@@ -4,6 +4,8 @@ import 'package:skincare_app/constant/app_icons.dart';
 import 'package:skincare_app/constant/app_string.dart';
 import 'package:skincare_app/model/product.dart';
 import 'package:skincare_app/screens/product_detail_screen.dart';
+import 'package:skincare_app/services/cart_service.dart';
+import 'package:skincare_app/services/favorites_service.dart';
 import 'package:skincare_app/widgets/app_bottom_nav.dart';
 import 'package:skincare_app/widgets/svg_icon.dart';
 
@@ -24,6 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // Fake products for now — later this comes from your API
   final List<Product> products = [
     Product(
+      id: "home-1",
       name: "Granactive Retinoid 5%",
       description: "This water-free solution contains a 5% concentration of retinoid.",
       price: 699,
@@ -32,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
       size: "30 ml",
     ),
     Product(
+      id: "home-2",
       name: "Granactive Retinoid 5%",
       description: "This water-free solution contains a 5% concentration of retinoid.",
       price: 699,
@@ -40,6 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
       size: "30 ml",
     ),
     Product(
+      id: "home-3",
       name: "Granactive Retinoid 5%",
       description: "This water-free solution contains a 5% concentration of retinoid.",
       price: 699,
@@ -48,6 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
       size: "30 ml",
     ),
     Product(
+      id: "home-4",
       name: "Granactive Retinoid 5%",
       description: "This water-free solution contains a 5% concentration of retinoid.",
       price: 699,
@@ -86,6 +92,8 @@ class _HomeScreenState extends State<HomeScreen> {
           setState(() => currentTab = index);
           if (index == 1) {
             Navigator.pushNamed(context, '/explore');
+          } else if (index == 2) {
+            Navigator.pushNamed(context, '/saved');
           } else if (index == 3) {
             Navigator.pushNamed(context, '/cart');
           } else if (index == 4) {
@@ -203,6 +211,18 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // ---------- ADD TO CART (quick-add from the product card) ----------
+  void _addToCart(Product product) {
+    CartService.instance.addToCart(product);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("${product.name} added to your bag"),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: AppColors.textDark,
+      ),
+    );
+  }
+
   // ---------- HORIZONTAL PRODUCT CARDS ----------
   Widget _buildProductList() {
     return SizedBox(
@@ -258,13 +278,25 @@ class _HomeScreenState extends State<HomeScreen> {
                 Positioned(
                   top: 12,
                   left: 12,
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
+                  child: GestureDetector(
+                    onTap: () => FavoritesService.instance.toggle(product),
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: ListenableBuilder(
+                        listenable: FavoritesService.instance,
+                        builder: (context, _) => SvgIcon(
+                          AppIcons.heart,
+                          color: FavoritesService.instance.isSaved(product)
+                              ? AppColors.accent
+                              : AppColors.textGrey,
+                          size: 18,
+                        ),
+                      ),
                     ),
-                    child: SvgIcon(AppIcons.heart, color: AppColors.accent, size: 18),
                   ),
                 ),
               ],
@@ -305,13 +337,16 @@ class _HomeScreenState extends State<HomeScreen> {
                           color: AppColors.textDark,
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: const BoxDecoration(
-                          color: AppColors.accent,
-                          shape: BoxShape.circle,
+                      GestureDetector(
+                        onTap: () => _addToCart(product),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: const BoxDecoration(
+                            color: AppColors.accent,
+                            shape: BoxShape.circle,
+                          ),
+                          child: SvgIcon(AppIcons.bag, color: Colors.white, size: 20),
                         ),
-                        child: SvgIcon(AppIcons.bag, color: Colors.white, size: 20),
                       ),
                     ],
                   ),

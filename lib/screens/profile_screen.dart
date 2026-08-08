@@ -82,7 +82,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SizedBox(width: 40),
+                          GestureDetector(
+                            onTap: () {
+                              if (Navigator.canPop(context)) {
+                                Navigator.pop(context);
+                              } else {
+                                Navigator.pushReplacementNamed(context, '/home');
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.05),
+                                    blurRadius: 10,
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.arrow_back,
+                                size: 22,
+                                color: AppColors.textDark,
+                              ),
+                            ),
+                          ),
                           const Text(
                             'Profile',
                             style: TextStyle(
@@ -166,8 +192,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 Icons.shopping_bag_outlined, AppColors.accent),
                             _buildStatItem('Points', '450',
                                 Icons.stars_rounded, Colors.amber),
-                            _buildStatItem('Reviews', '5',
-                                Icons.rate_review_outlined, Colors.blueAccent),
                           ],
                         ),
                       ],
@@ -202,51 +226,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
 
-            const SizedBox(height: 16),
-
-            // Switch to Hire Mode Card
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.02),
-                      blurRadius: 10,
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.autorenew_rounded,
-                        color: AppColors.textDark, size: 20),
-                    const SizedBox(width: 12),
-                    const Text(
-                      'Switch to Hire Mode',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textDark,
-                      ),
-                    ),
-                    const Spacer(),
-                    Switch(
-                      value: _isHireMode,
-                      activeColor: Colors.white,
-                      activeTrackColor: AppColors.accent,
-                      inactiveThumbColor: Colors.white,
-                      inactiveTrackColor: Colors.black12,
-                      onChanged: (val) => setState(() => _isHireMode = val),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
             const SizedBox(height: 24),
 
             // General Options Section
@@ -272,11 +251,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   _buildTile(
                     icon: Icons.location_on_outlined,
                     title: 'Location',
-                    onTap: () {},
-                  ),
-                  _buildTile(
-                    icon: Icons.account_balance_wallet_outlined,
-                    title: 'Manage Withdrawals',
                     onTap: () {},
                   ),
                   _buildTile(

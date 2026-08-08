@@ -7,6 +7,7 @@ class AppString {
   static const String welcome = "Welcome Back!";
   static const String welcomeSub = "Sign in to continue your journey.";
   static const String email = "Email Address";
+  static const String name = "Name";
   static const String password = "Password";
   static const String forgotPass = "Forgot Password?";
   static const String signIn = "Sign In";
@@ -63,6 +64,11 @@ static const String productCollections = "Product collections";
       "Please note that all orders are typically processed within 1-2 business days. "
       "Once your order has been processed and shipped, you will receive a confirmation "
       "email with tracking information.";
+
+  // Saved
+  static const String savedTitle = "Saved";
+  static const String emptySaved = "No saved items yet";
+  static const String emptySavedSub = "Tap the heart on any product to save it here.";
 
   // Thank you / order confirmation
   static const String thankYouTitle = "Thank you for shopping with us!";

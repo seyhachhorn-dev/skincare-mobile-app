@@ -19,7 +19,7 @@ class CartService extends ChangeNotifier {
   int get pointsEarned => (subtotal * 0.1).round();
 
   void addToCart(Product product, {int quantity = 1}) {
-    final existing = _items.where((item) => item.product.name == product.name);
+    final existing = _items.where((item) => item.product.id == product.id);
     if (existing.isNotEmpty) {
       existing.first.quantity += quantity;
     } else {
