@@ -7,6 +7,7 @@ import 'package:skincare_app/screens/product_detail_screen.dart';
 import 'package:skincare_app/services/cart_service.dart';
 import 'package:skincare_app/services/favorites_service.dart';
 import 'package:skincare_app/widgets/app_bottom_nav.dart';
+import 'package:skincare_app/widgets/app_drawer.dart';
 import 'package:skincare_app/widgets/svg_icon.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -17,6 +18,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   int selectedCategory = 0; // which filter chip is active
   int currentTab = 0;       // which bottom nav item is active
@@ -66,7 +68,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: Colors.white,
+      drawer: const AppDrawer(),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -111,7 +115,10 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          SvgIcon(AppIcons.menu, color: AppColors.textDark),
+          GestureDetector(
+            onTap: () => _scaffoldKey.currentState?.openDrawer(),
+            child: SvgIcon(AppIcons.menu, color: AppColors.textDark),
+          ),
           const Text(
             AppString.brandName,
             style: TextStyle(

@@ -7,6 +7,7 @@ import 'package:skincare_app/screens/product_detail_screen.dart';
 import 'package:skincare_app/services/cart_service.dart';
 import 'package:skincare_app/services/favorites_service.dart';
 import 'package:skincare_app/widgets/app_bottom_nav.dart';
+import 'package:skincare_app/widgets/app_drawer.dart';
 import 'package:skincare_app/widgets/svg_icon.dart';
 
 class ExploreScreen extends StatefulWidget {
@@ -17,6 +18,7 @@ class ExploreScreen extends StatefulWidget {
 }
 
 class _ExploreScreenState extends State<ExploreScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int currentTab = 1; // Explore tab active
   int selectedCategory = 0;
   int selectedFilter = 0;
@@ -94,7 +96,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: Colors.white,
+      drawer: const AppDrawer(),
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
@@ -134,7 +138,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          SvgIcon(AppIcons.menu, color: AppColors.textDark),
+          GestureDetector(
+            onTap: () => _scaffoldKey.currentState?.openDrawer(),
+            child: SvgIcon(AppIcons.menu, color: AppColors.textDark),
+          ),
           const Text(
             AppString.exploreTitle,
             style: TextStyle(

@@ -78,4 +78,76 @@ static const String productCollections = "Product collections";
   static const String support = "Support.";
   static const String orderDetailsBtn = "Order Details";
   static const String doneBtn = "Done";
+
+  // Profile
+  static const String profileTitle = "Profile";
+  static const String generalSection = "General";
+  static const String profileSetting = "Profile Setting";
+  static const String location = "Location";
+  static const String orderHistory = "Order History";
+  static const String helpSupport = "Help & Support";
+  static const String logOut = "Log Out";
+
+  // Edit profile
+  static const String editProfile = "Edit Profile";
+  static const String saveChanges = "Save Changes";
+
+  static const String save = "Save";
+
+  // Create address
+  static const String createAddress = "Create Address";
+  static const String selectProvince = "Province";
+  static const String selectDistrict = "District";
+  static const String selectCommune = "Commune";
+  static const String houseNoHint = "House no and street number";
+  static const String chooseLocationSection = "Choose Location";
+  static const String selectPickupPoint = "Nearby pickup point (optional)";
+  static const String typeOfAddress = "Type Of Address";
+  static const String addressHome = "Home";
+  static const String addressOffice = "Office";
+  static const String addressSchool = "School";
+  static const String addressOther = "Other";
+  static const String setAsDefaultAddress = "Set As Default Address";
+  static const String incompleteAddress = "Please add a house number and select a commune";
+
+  // Order history
+  static const String orderHistoryEmpty = "No orders yet";
+  static const String orderHistoryEmptySub = "Orders you place will show up here.";
+
+  // Help & support
+  static const String faqTitle = "Frequently Asked Questions";
+  static const String contactUs = "Contact Us";
+  static const String emailSupport = "Email Support";
+  static const String liveChat = "Live Chat";
+  static const String supportEmail = "support@hinata-skincare.com";
+  static const String emailCopied = "Support email copied to clipboard";
+  static const String liveChatComingSoon = "Live chat is coming soon";
+
+  // Drawer
+  static const String menuSettings = "Settings";
+  static const String menuAbout = "About";
+
+  // Settings
+  static const String settingsTitle = "Settings";
+  static const String notificationsSection = "Notifications";
+  static const String pushNotifications = "Push Notifications";
+  static const String pushNotificationsSub = "Get notified about your orders and account activity";
+  static const String orderUpdates = "Order Updates";
+  static const String orderUpdatesSub = "Shipping and delivery status for your orders";
+  static const String promotionsOffers = "Promotions & Offers";
+  static const String promotionsOffersSub = "New products, sales, and reward point news";
+
+  // About
+  static const String aboutTitle = "About";
+  static const String aboutDescription =
+      "Hinata blends clinical-grade skincare with everyday simplicity. We curate "
+      "dermatologist-informed formulas so you can build a routine that actually "
+      "works for your skin.";
+  static const String appVersion = "App Version";
+  static const String copyright = "© 2026 Hinata. All rights reserved.";
+
+  // Log out confirmation
+  static const String logOutConfirmTitle = "Log Out";
+  static const String logOutConfirmMessage = "Are you sure you want to log out?";
+  static const String cancel = "Cancel";
 }

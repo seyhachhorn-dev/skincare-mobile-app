@@ -1,5 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:skincare_app/constant/app_colors.dart';
+import 'package:skincare_app/constant/app_string.dart';
+import 'package:skincare_app/screens/address_screen.dart';
+import 'package:skincare_app/screens/edit_profile_screen.dart';
+import 'package:skincare_app/screens/help_support_screen.dart';
+import 'package:skincare_app/screens/order_history_screen.dart';
+import 'package:skincare_app/services/auth_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -10,41 +18,35 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   // Mock data for now — later comes from AuthService / API
-  final String name = "XioFik Hasan";
-  final String location = "Sterling, Brooklyn";
+  String name = "XioFik Hasan";
+  String email = "xiofik.hasan@email.com";
+  String location = "Sterling, Brooklyn";
+  String? avatarImagePath;
 
   bool _isHireMode = false;
 
-  Future<void> _handleLogout() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Log Out'),
-        content: const Text('Are you sure you want to log out?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
-            child: const Text('Log Out',
-                style: TextStyle(fontWeight: FontWeight.bold)),
-          ),
-        ],
+  Future<void> _openEditProfile() async {
+    final result = await Navigator.push<Map<String, String?>>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditProfileScreen(name: name, email: email, imagePath: avatarImagePath),
       ),
     );
+    if (result == null || !mounted) return;
+    setState(() {
+      name = result['name'] ?? name;
+      email = result['email'] ?? email;
+      avatarImagePath = result['imagePath'];
+    });
+  }
 
-    if (confirmed != true) return;
-    if (!mounted) return;
-
-    // later: call AuthService.logout() here before navigating
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      '/login',
-      (route) => false,
+  Future<void> _openLocationEditor() async {
+    final updated = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(builder: (context) => const AddressScreen()),
     );
+    if (updated == null || updated.isEmpty || !mounted) return;
+    setState(() => location = updated);
   }
 
   @override
@@ -110,7 +112,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                           const Text(
-                            'Profile',
+                            AppString.profileTitle,
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -218,8 +220,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: CircleAvatar(
                       radius: 46,
                       backgroundColor: AppColors.accent.withValues(alpha: 0.15),
-                      child: const Icon(Icons.person_outline_rounded,
-                          size: 50, color: AppColors.accent),
+                      backgroundImage:
+                          avatarImagePath != null ? FileImage(File(avatarImagePath!)) : null,
+                      child: avatarImagePath == null
+                          ? const Icon(Icons.person_outline_rounded,
+                              size: 50, color: AppColors.accent)
+                          : null,
                     ),
                   ),
                 ),
@@ -235,7 +241,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'General',
+                    AppString.generalSection,
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -245,31 +251,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 12),
                   _buildTile(
                     icon: Icons.person_outline_rounded,
-                    title: 'Profile Setting',
-                    onTap: () {},
+                    title: AppString.profileSetting,
+                    onTap: _openEditProfile,
                   ),
                   _buildTile(
                     icon: Icons.location_on_outlined,
-                    title: 'Location',
-                    onTap: () {},
+                    title: AppString.location,
+                    onTap: _openLocationEditor,
                   ),
                   _buildTile(
                     icon: Icons.receipt_long_outlined,
-                    title: 'Order History',
-                    onTap: () {},
+                    title: AppString.orderHistory,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const OrderHistoryScreen()),
+                    ),
                   ),
                   _buildTile(
                     icon: Icons.help_outline_rounded,
-                    title: 'Help & Support',
-                    onTap: () {},
+                    title: AppString.helpSupport,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const HelpSupportScreen()),
+                    ),
                   ),
                   _buildTile(
                     icon: Icons.logout_rounded,
-                    title: 'Log Out',
+                    title: AppString.logOut,
                     iconColor: Colors.redAccent,
                     textColor: Colors.redAccent,
                     showChevron: false,
-                    onTap: _handleLogout,
+                    onTap: () => AuthService.logout(context),
                   ),
                   const SizedBox(height: 32),
                 ],
