@@ -34,4 +34,11 @@ static const String productCollections = "Product collections";
   // Explore
   static const String exploreTitle = "Explore";
   static const String exploreSearchHint = "Search for products, brands...";
+
+  // Product detail
+  static const String size = "Size";
+  static const String qty = "Qty";
+  static const String details = "Details";
+  static const String shippingReturns = "Shipping & Returns";
+  static const String addToBasket = "Add to Basket";
 }

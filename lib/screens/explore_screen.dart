@@ -3,6 +3,7 @@ import 'package:skincare_app/constant/app_colors.dart';
 import 'package:skincare_app/constant/app_icons.dart';
 import 'package:skincare_app/constant/app_string.dart';
 import 'package:skincare_app/model/product.dart';
+import 'package:skincare_app/screens/product_detail_screen.dart';
 import 'package:skincare_app/widgets/svg_icon.dart';
 
 class ExploreScreen extends StatefulWidget {
@@ -36,36 +37,48 @@ class _ExploreScreenState extends State<ExploreScreen> {
       description: "This water-free solution contains a 5% concentration of retinoid.",
       price: 699,
       image: "assets/images/pro1.png",
+      brand: "The Ordinary",
+      size: "30 ml",
     ),
     Product(
       name: "Niacinamide 10% + Zinc",
       description: "A high-strength vitamin and mineral blemish formula.",
       price: 549,
       image: "assets/images/pro2.png",
+      brand: "The Ordinary",
+      size: "30 ml",
     ),
     Product(
       name: "Hyaluronic Acid 2% + B5",
       description: "A hydration support formula with ultra-pure hyaluronic acid.",
       price: 629,
       image: "assets/images/pro3.png",
+      brand: "The Ordinary",
+      size: "30 ml",
     ),
     Product(
       name: "Buffet + Copper Peptides",
       description: "Multi-technology peptide serum for visible signs of aging.",
       price: 899,
       image: "assets/images/pro4.jpg",
+      brand: "The Ordinary",
+      size: "30 ml",
     ),
     Product(
       name: "Granactive Retinoid 2%",
       description: "A lighter-strength water-free solution with 2% retinoid.",
       price: 599,
       image: "assets/images/pro1.png",
+      brand: "The Ordinary",
+      size: "30 ml",
     ),
     Product(
       name: "Ascorbyl Glucoside 12%",
       description: "A stable vitamin C solution to brighten and even skin tone.",
       price: 749,
       image: "assets/images/pro2.png",
+      brand: "The Ordinary",
+      size: "30 ml",
     ),
   ];
 
@@ -237,85 +250,91 @@ class _ExploreScreenState extends State<ExploreScreen> {
   }
 
   Widget _buildProductCard(Product product) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => ProductDetailScreen(product: product)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                  child: Image.asset(product.image, fit: BoxFit.cover),
-                ),
-                Positioned(
-                  top: 8,
-                  left: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(5),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                    child: SvgIcon(AppIcons.heart, color: AppColors.accent, size: 14),
-                  ),
-                ),
-              ],
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  product.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textDark,
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                    child: Image.asset(product.image, fit: BoxFit.cover),
                   ),
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "₹${product.price}",
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textDark,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(6),
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(5),
                       decoration: const BoxDecoration(
-                        color: AppColors.accent,
+                        color: Colors.white,
                         shape: BoxShape.circle,
                       ),
-                      child: SvgIcon(AppIcons.bag, color: Colors.white, size: 14),
+                      child: SvgIcon(AppIcons.heart, color: AppColors.accent, size: 14),
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    product.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textDark,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "₹${product.price}",
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textDark,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: const BoxDecoration(
+                          color: AppColors.accent,
+                          shape: BoxShape.circle,
+                        ),
+                        child: SvgIcon(AppIcons.bag, color: Colors.white, size: 14),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
