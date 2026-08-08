@@ -1,5 +1,5 @@
 class AppString {
-  static const String brandName = "HANA";
+  static const String brandName = "Hinata";
   static const String tagline =
       "Skincare, beauty, and essentials — your skin, our promise.";
   // Auth
@@ -19,6 +19,11 @@ class AppString {
   static const String chooseSub = "You can choose more than one";
   static const String continueBtn = "Continue";
   static const String skipForNow = "Skip for now";
+
+static const String searchHint      = "Search products";
+static const String browseCategory  = "Browse by categories";
+static const String viewAll         = "View all";
+static const String productCollections = "Product collections";
 
   
 }
