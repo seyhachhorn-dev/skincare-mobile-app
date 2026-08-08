@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:skincare_app/constant/app_colors.dart';
+import 'package:skincare_app/screens/explore_screen.dart';
 import 'package:skincare_app/screens/favorithcategory_screen.dart';
 import 'package:skincare_app/screens/home_screen.dart';
 import 'package:skincare_app/screens/login_screen.dart';
+import 'package:skincare_app/screens/profile_screen.dart';
 import 'package:skincare_app/screens/splash_screen.dart';
 import 'package:skincare_app/screens/onboarding_screen.dart';
 
@@ -26,6 +28,8 @@ class MyApp extends StatelessWidget {
         '/login': (context) => const LoginScreen(),
         '/favorite': (context) => const FavoriteCategory(),
         '/home': (context) => const HomeScreen(),
+        '/profile': (context) => const ProfileScreen(),
+        '/explore': (context) => const ExploreScreen(),
       },
      //call page to display here
     );

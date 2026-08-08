@@ -5,19 +5,29 @@ import 'package:skincare_app/constant/app_string.dart';
 import 'package:skincare_app/model/product.dart';
 import 'package:skincare_app/widgets/svg_icon.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class ExploreScreen extends StatefulWidget {
+  const ExploreScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<ExploreScreen> createState() => _ExploreScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-
-  int selectedCategory = 0; // which filter chip is active
-  int currentTab = 0;       // which bottom nav item is active
+class _ExploreScreenState extends State<ExploreScreen> {
+  int currentTab = 1; // Explore tab active
+  int selectedCategory = 0;
+  int selectedFilter = 0;
 
   final List<String> filters = ["Trending", "New Products", "Highly Rated"];
+
+  final List<Map<String, String>> categories = [
+    {"icon": "🧴", "name": "All"},
+    {"icon": "💧", "name": "Toner"},
+    {"icon": "🌸", "name": "Serum"},
+    {"icon": "🫗", "name": "Face Oil"},
+    {"icon": "🧼", "name": "Cleanser"},
+    {"icon": "☀️", "name": "Suncare"},
+    {"icon": "💄", "name": "Makeup"},
+  ];
 
   // Fake products for now — later this comes from your API
   final List<Product> products = [
@@ -28,22 +38,34 @@ class _HomeScreenState extends State<HomeScreen> {
       image: "assets/images/pro1.png",
     ),
     Product(
-      name: "Granactive Retinoid 5%",
-      description: "This water-free solution contains a 5% concentration of retinoid.",
-      price: 699,
+      name: "Niacinamide 10% + Zinc",
+      description: "A high-strength vitamin and mineral blemish formula.",
+      price: 549,
       image: "assets/images/pro2.png",
     ),
     Product(
-      name: "Granactive Retinoid 5%",
-      description: "This water-free solution contains a 5% concentration of retinoid.",
-      price: 699,
+      name: "Hyaluronic Acid 2% + B5",
+      description: "A hydration support formula with ultra-pure hyaluronic acid.",
+      price: 629,
       image: "assets/images/pro3.png",
     ),
     Product(
-      name: "Granactive Retinoid 5%",
-      description: "This water-free solution contains a 5% concentration of retinoid.",
-      price: 699,
+      name: "Buffet + Copper Peptides",
+      description: "Multi-technology peptide serum for visible signs of aging.",
+      price: 899,
       image: "assets/images/pro4.jpg",
+    ),
+    Product(
+      name: "Granactive Retinoid 2%",
+      description: "A lighter-strength water-free solution with 2% retinoid.",
+      price: 599,
+      image: "assets/images/pro1.png",
+    ),
+    Product(
+      name: "Ascorbyl Glucoside 12%",
+      description: "A stable vitamin C solution to brighten and even skin tone.",
+      price: 749,
+      image: "assets/images/pro2.png",
     ),
   ];
 
@@ -52,29 +74,24 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-
-              _buildHeader(),
-              _buildSearchBar(),
-              _buildSectionTitle(AppString.browseCategory),
-              _buildFilterChips(),
-              _buildProductList(),
-              _buildSectionTitle(AppString.productCollections),
-              _buildCollectionRow(),
-              const SizedBox(height: 20),
-
-            ],
-          ),
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(child: _buildHeader()),
+            SliverToBoxAdapter(child: _buildSearchBar()),
+            SliverToBoxAdapter(child: _buildCategoryStrip()),
+            SliverToBoxAdapter(child: _buildFilterChips()),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(24, 4, 24, 24),
+              sliver: _buildProductGrid(),
+            ),
+          ],
         ),
       ),
       bottomNavigationBar: _buildBottomNav(),
     );
   }
 
-  // ---------- HEADER (menu, logo, bell) ----------
+  // ---------- HEADER ----------
   Widget _buildHeader() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
@@ -83,9 +100,9 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           SvgIcon(AppIcons.menu, color: AppColors.textDark),
           const Text(
-            AppString.brandName,
+            AppString.exploreTitle,
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 20,
               fontWeight: FontWeight.w700,
               color: AppColors.textDark,
             ),
@@ -102,7 +119,7 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       child: TextField(
         decoration: InputDecoration(
-          hintText: AppString.searchHint,
+          hintText: AppString.exploreSearchHint,
           prefixIcon: Padding(
             padding: const EdgeInsets.all(12),
             child: SvgIcon(AppIcons.search, color: AppColors.textGrey, size: 20),
@@ -118,34 +135,56 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ---------- SECTION TITLE + View all ----------
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textDark,
+  // ---------- CATEGORY STRIP ----------
+  Widget _buildCategoryStrip() {
+    return SizedBox(
+      height: 96,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+        itemCount: categories.length,
+        itemBuilder: (context, index) {
+          final isActive = selectedCategory == index;
+          final category = categories[index];
+          return GestureDetector(
+            onTap: () => setState(() => selectedCategory = index),
+            child: Container(
+              width: 68,
+              margin: const EdgeInsets.only(right: 12),
+              child: Column(
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: isActive ? AppColors.accent : Colors.grey.shade100,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(category["icon"]!, style: const TextStyle(fontSize: 24)),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    category["name"]!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                      color: isActive ? AppColors.accent : AppColors.textGrey,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const Text(
-            AppString.viewAll,
-            style: TextStyle(
-              color: AppColors.textGrey,
-              decoration: TextDecoration.underline,
-            ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
 
-  // ---------- FILTER CHIPS (Trending / New / Rated) ----------
+  // ---------- FILTER CHIPS ----------
   Widget _buildFilterChips() {
     return SizedBox(
       height: 44,
@@ -154,9 +193,9 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 24),
         itemCount: filters.length,
         itemBuilder: (context, index) {
-          final isActive = selectedCategory == index;
+          final isActive = selectedFilter == index;
           return GestureDetector(
-            onTap: () => setState(() => selectedCategory = index),
+            onTap: () => setState(() => selectedFilter = index),
             child: Container(
               margin: const EdgeInsets.only(right: 12),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -181,25 +220,24 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ---------- HORIZONTAL PRODUCT CARDS ----------
-  Widget _buildProductList() {
-    return SizedBox(
-      height: 340,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-        itemCount: products.length,
-        itemBuilder: (context, index) {
-          return _buildProductCard(products[index]);
-        },
+  // ---------- PRODUCT GRID ----------
+  Widget _buildProductGrid() {
+    return SliverGrid(
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 16,
+        crossAxisSpacing: 16,
+        childAspectRatio: 0.68,
+      ),
+      delegate: SliverChildBuilderDelegate(
+        (context, index) => _buildProductCard(products[index]),
+        childCount: products.length,
       ),
     );
   }
 
   Widget _buildProductCard(Product product) {
     return Container(
-      width: 260,
-      margin: const EdgeInsets.only(right: 16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -214,125 +252,65 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // image + heart
-          Stack(
-            children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(16),
+          Expanded(
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  child: Image.asset(product.image, fit: BoxFit.cover),
                 ),
-                child: Image.asset(
-                  product.image,
-                  height: 180,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
-              ),
-              Positioned(
-                top: 12,
-                left: 12,
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
+                Positioned(
+                  top: 8,
+                  left: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(5),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: SvgIcon(AppIcons.heart, color: AppColors.accent, size: 14),
                   ),
-                  child: SvgIcon(AppIcons.heart, color: AppColors.accent, size: 18),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          // text
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   product.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 16,
+                    fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textDark,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  product.description,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textGrey,
-                  ),
-                ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      "${product.price}",
+                      "₹${product.price}",
                       style: const TextStyle(
-                        fontSize: 18,
+                        fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: AppColors.textDark,
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(6),
                       decoration: const BoxDecoration(
                         color: AppColors.accent,
                         shape: BoxShape.circle,
                       ),
-                      child: SvgIcon(AppIcons.bag, color: Colors.white, size: 20),
+                      child: SvgIcon(AppIcons.bag, color: Colors.white, size: 14),
                     ),
                   ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ---------- COLLECTION ROW (small horizontal item) ----------
-  Widget _buildCollectionRow() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.asset(
-              "assets/images/pro1.png",
-              width: 90,
-              height: 70,
-              fit: BoxFit.cover,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Granactive Retinoid 5%",
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textDark,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  "This water-free solution contains a 5%...",
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textGrey,
-                  ),
                 ),
               ],
             ),
@@ -348,8 +326,8 @@ class _HomeScreenState extends State<HomeScreen> {
       currentIndex: currentTab,
       onTap: (index) {
         setState(() => currentTab = index);
-        if (index == 1) {
-          Navigator.pushNamed(context, '/explore');
+        if (index == 0) {
+          Navigator.pushReplacementNamed(context, '/home');
         } else if (index == 4) {
           Navigator.pushNamed(context, '/profile');
         }

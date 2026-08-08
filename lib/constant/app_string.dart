@@ -25,5 +25,13 @@ static const String browseCategory  = "Browse by categories";
 static const String viewAll         = "View all";
 static const String productCollections = "Product collections";
 
-  
+  // Onboarding — skin quiz intro
+  static const String skinQuizTitle = "Tell Us About Your Skin";
+  static const String skinQuizSubtitle =
+      "Answer a few quick questions so we can recommend the perfect products for your needs.";
+  static const String back = "Back";
+
+  // Explore
+  static const String exploreTitle = "Explore";
+  static const String exploreSearchHint = "Search for products, brands...";
 }
