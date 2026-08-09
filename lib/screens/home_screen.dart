@@ -6,6 +6,7 @@ import 'package:skincare_app/model/product.dart';
 import 'package:skincare_app/screens/product_detail_screen.dart';
 import 'package:skincare_app/services/cart_service.dart';
 import 'package:skincare_app/services/favorites_service.dart';
+import 'package:skincare_app/services/product_service.dart';
 import 'package:skincare_app/widgets/app_bottom_nav.dart';
 import 'package:skincare_app/widgets/app_drawer.dart';
 import 'package:skincare_app/widgets/app_snackbar.dart';
@@ -26,45 +27,40 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<String> filters = ["Trending", "New Products", "Highly Rated"];
 
-  // Fake products for now — later this comes from your API
-  final List<Product> products = [
-    Product(
-      id: "home-1",
-      name: "Granactive Retinoid 5%",
-      description: "This water-free solution contains a 5% concentration of retinoid.",
-      price: 699,
-      image: "assets/images/pro1.png",
-      brand: "The Ordinary",
-      size: "30 ml",
-    ),
-    Product(
-      id: "home-2",
-      name: "Granactive Retinoid 5%",
-      description: "This water-free solution contains a 5% concentration of retinoid.",
-      price: 699,
-      image: "assets/images/pro2.png",
-      brand: "The Ordinary",
-      size: "30 ml",
-    ),
-    Product(
-      id: "home-3",
-      name: "Granactive Retinoid 5%",
-      description: "This water-free solution contains a 5% concentration of retinoid.",
-      price: 699,
-      image: "assets/images/pro3.png",
-      brand: "The Ordinary",
-      size: "30 ml",
-    ),
-    Product(
-      id: "home-4",
-      name: "Granactive Retinoid 5%",
-      description: "This water-free solution contains a 5% concentration of retinoid.",
-      price: 699,
-      image: "assets/images/pro4.jpg",
-      brand: "The Ordinary",
-      size: "30 ml",
-    ),
-  ];
+  List<Product> products = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHome();
+  }
+
+  Future<void> _loadHome() async {
+    // Cart/favorites feed the bottom-nav badge and heart icons across
+    // every screen, so they're loaded here too — this is the one screen
+    // guaranteed to run early in every session (post-login/onboarding).
+    final results = await Future.wait([
+      ProductService.instance.list(),
+      CartService.instance.load(),
+      FavoritesService.instance.load(),
+    ]);
+    if (!mounted) return;
+
+    final productResponse = results[0] as ProductListResponse;
+    setState(() {
+      if (productResponse.status) products = productResponse.products;
+      _isLoading = false;
+    });
+
+    if (!productResponse.status) {
+      AppSnackBar.error(
+        context,
+        title: 'Could not load products',
+        message: productResponse.message.isNotEmpty ? productResponse.message : 'Please try again.',
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -220,17 +216,40 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ---------- ADD TO CART (quick-add from the product card) ----------
-  void _addToCart(Product product) {
-    CartService.instance.addToCart(product);
-    AppSnackBar.success(
-      context,
-      title: 'Added to bag',
-      message: '${product.name} added to your bag',
-    );
+  Future<void> _addToCart(Product product) async {
+    final added = await CartService.instance.addToCart(product);
+    if (!mounted) return;
+    if (added) {
+      AppSnackBar.success(
+        context,
+        title: 'Added to bag',
+        message: '${product.name} added to your bag',
+      );
+    } else {
+      AppSnackBar.error(
+        context,
+        title: "Couldn't add to bag",
+        message: 'Please try again.',
+      );
+    }
   }
 
   // ---------- HORIZONTAL PRODUCT CARDS ----------
   Widget _buildProductList() {
+    if (_isLoading) {
+      return const SizedBox(
+        height: 340,
+        child: Center(child: CircularProgressIndicator(color: AppColors.accent)),
+      );
+    }
+    if (products.isEmpty) {
+      return const SizedBox(
+        height: 120,
+        child: Center(
+          child: Text('No products yet', style: TextStyle(color: AppColors.textGrey)),
+        ),
+      );
+    }
     return SizedBox(
       height: 340,
       child: ListView.builder(
@@ -274,8 +293,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(16),
                   ),
-                  child: Image.asset(
-                    product.image,
+                  child: Image(
+                    image: product.imageProvider,
                     height: 180,
                     width: double.infinity,
                     fit: BoxFit.cover,
@@ -367,14 +386,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // ---------- COLLECTION ROW (small horizontal item) ----------
   Widget _buildCollectionRow() {
+    if (products.isEmpty) return const SizedBox.shrink();
+    final featured = products.first;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Row(
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: Image.asset(
-              "assets/images/pro1.png",
+            child: Image(
+              image: featured.imageProvider,
               width: 90,
               height: 70,
               fit: BoxFit.cover,
@@ -385,9 +406,11 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  "Granactive Retinoid 5%",
-                  style: TextStyle(
+                Text(
+                  featured.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textDark,
@@ -395,10 +418,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  "This water-free solution contains a 5%...",
+                  featured.description,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 13,
                     color: AppColors.textGrey,
                   ),

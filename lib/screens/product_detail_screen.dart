@@ -32,7 +32,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final images = [widget.product.image];
+    final images = [widget.product.imageProvider];
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -50,7 +50,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   // ---------- IMAGE CAROUSEL ----------
-  Widget _buildImageCarousel(List<String> images) {
+  Widget _buildImageCarousel(List<ImageProvider> images) {
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -58,7 +58,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           controller: _imageController,
           itemCount: images.length,
           onPageChanged: (index) => setState(() => _imageIndex = index),
-          itemBuilder: (context, index) => Image.asset(images[index], fit: BoxFit.cover),
+          itemBuilder: (context, index) => Image(image: images[index], fit: BoxFit.cover),
         ),
         Positioned(
           top: MediaQuery.of(context).padding.top + 12,
@@ -332,14 +332,23 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           child: SizedBox(
             height: 40,
             child: ElevatedButton.icon(
-              onPressed: () {
-                CartService.instance.addToCart(widget.product, quantity: _quantity);
-                AppSnackBar.success(
-                  context,
-                  title: 'Added to bag',
-                  message: '${widget.product.name} added to your bag',
-                );
-                Navigator.pop(context);
+              onPressed: () async {
+                final added = await CartService.instance.addToCart(widget.product, quantity: _quantity);
+                if (!mounted) return;
+                if (added) {
+                  AppSnackBar.success(
+                    context,
+                    title: 'Added to bag',
+                    message: '${widget.product.name} added to your bag',
+                  );
+                  Navigator.pop(context);
+                } else {
+                  AppSnackBar.error(
+                    context,
+                    title: "Couldn't add to bag",
+                    message: 'Please try again.',
+                  );
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryLight,

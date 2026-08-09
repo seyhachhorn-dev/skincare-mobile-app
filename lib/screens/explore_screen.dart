@@ -2,20 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:skincare_app/constant/app_colors.dart';
 import 'package:skincare_app/constant/app_icons.dart';
 import 'package:skincare_app/constant/app_string.dart';
+import 'package:skincare_app/model/category.dart';
 import 'package:skincare_app/model/product.dart';
 import 'package:skincare_app/screens/product_detail_screen.dart';
 import 'package:skincare_app/services/cart_service.dart';
+import 'package:skincare_app/services/category_service.dart';
 import 'package:skincare_app/services/favorites_service.dart';
+import 'package:skincare_app/services/product_service.dart';
 import 'package:skincare_app/widgets/app_bottom_nav.dart';
 import 'package:skincare_app/widgets/app_drawer.dart';
 import 'package:skincare_app/widgets/app_snackbar.dart';
 import 'package:skincare_app/widgets/svg_icon.dart';
-
-class _CategoryOption {
-  final IconData icon;
-  final String name;
-  const _CategoryOption(this.icon, this.name);
-}
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
@@ -32,77 +29,52 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
   final List<String> filters = ["Trending", "New Products", "Highly Rated"];
 
-  // Material Icons instead of raw emoji — several of the previous emoji
-  // (🧴 🧼) are recent enough Unicode additions that they render as blank
-  // "tofu" boxes on some Android devices' OS/OEM emoji fonts. Icons are
-  // bundled with Flutter itself, so they render identically everywhere.
-  final List<_CategoryOption> categories = const [
-    _CategoryOption(Icons.apps_rounded, "All"),
-    _CategoryOption(Icons.water_drop_outlined, "Toner"),
-    _CategoryOption(Icons.science_outlined, "Serum"),
-    _CategoryOption(Icons.opacity_outlined, "Face Oil"),
-    _CategoryOption(Icons.clean_hands_outlined, "Cleanser"),
-    _CategoryOption(Icons.wb_sunny_outlined, "Suncare"),
-    _CategoryOption(Icons.brush_outlined, "Makeup"),
-  ];
+  // "All" is synthesized locally (id: null) — the backend has no such
+  // category, it just means "don't filter". Everything after it comes
+  // from GET /api/categories; only the local Category.icon mapping
+  // (Material Icons, not the backend's raw emoji) avoids the "tofu box"
+  // rendering bug some Android devices hit on newer emoji glyphs.
+  List<Category> categories = [Category(id: '', name: 'All')];
+  List<Product> allProducts = [];
+  bool _isLoading = true;
 
-  // Fake products for now — later this comes from your API
-  final List<Product> products = [
-    Product(
-      id: "explore-1",
-      name: "Granactive Retinoid 5%",
-      description: "This water-free solution contains a 5% concentration of retinoid.",
-      price: 699,
-      image: "assets/images/pro1.png",
-      brand: "The Ordinary",
-      size: "30 ml",
-    ),
-    Product(
-      id: "explore-2",
-      name: "Niacinamide 10% + Zinc",
-      description: "A high-strength vitamin and mineral blemish formula.",
-      price: 549,
-      image: "assets/images/pro2.png",
-      brand: "The Ordinary",
-      size: "30 ml",
-    ),
-    Product(
-      id: "explore-3",
-      name: "Hyaluronic Acid 2% + B5",
-      description: "A hydration support formula with ultra-pure hyaluronic acid.",
-      price: 629,
-      image: "assets/images/pro3.png",
-      brand: "The Ordinary",
-      size: "30 ml",
-    ),
-    Product(
-      id: "explore-4",
-      name: "Buffet + Copper Peptides",
-      description: "Multi-technology peptide serum for visible signs of aging.",
-      price: 899,
-      image: "assets/images/pro4.jpg",
-      brand: "The Ordinary",
-      size: "30 ml",
-    ),
-    Product(
-      id: "explore-5",
-      name: "Granactive Retinoid 2%",
-      description: "A lighter-strength water-free solution with 2% retinoid.",
-      price: 599,
-      image: "assets/images/pro1.png",
-      brand: "The Ordinary",
-      size: "30 ml",
-    ),
-    Product(
-      id: "explore-6",
-      name: "Ascorbyl Glucoside 12%",
-      description: "A stable vitamin C solution to brighten and even skin tone.",
-      price: 749,
-      image: "assets/images/pro2.png",
-      brand: "The Ordinary",
-      size: "30 ml",
-    ),
-  ];
+  List<Product> get products {
+    if (selectedCategory == 0) return allProducts;
+    final categoryId = categories[selectedCategory].id;
+    return allProducts.where((p) => '${p.categoryId}' == categoryId).toList();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadExplore();
+  }
+
+  Future<void> _loadExplore() async {
+    final results = await Future.wait([
+      ProductService.instance.list(),
+      CategoryService.instance.list(),
+    ]);
+    if (!mounted) return;
+
+    final productResponse = results[0] as ProductListResponse;
+    final categoryResponse = results[1] as CategoryListResponse;
+    setState(() {
+      if (productResponse.status) allProducts = productResponse.products;
+      if (categoryResponse.status) {
+        categories = [Category(id: '', name: 'All'), ...categoryResponse.categories];
+      }
+      _isLoading = false;
+    });
+
+    if (!productResponse.status) {
+      AppSnackBar.error(
+        context,
+        title: 'Could not load products',
+        message: productResponse.message.isNotEmpty ? productResponse.message : 'Please try again.',
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -279,17 +251,44 @@ class _ExploreScreenState extends State<ExploreScreen> {
   }
 
   // ---------- ADD TO CART (quick-add from the product card) ----------
-  void _addToCart(Product product) {
-    CartService.instance.addToCart(product);
-    AppSnackBar.success(
-      context,
-      title: 'Added to bag',
-      message: '${product.name} added to your bag',
-    );
+  Future<void> _addToCart(Product product) async {
+    final added = await CartService.instance.addToCart(product);
+    if (!mounted) return;
+    if (added) {
+      AppSnackBar.success(
+        context,
+        title: 'Added to bag',
+        message: '${product.name} added to your bag',
+      );
+    } else {
+      AppSnackBar.error(
+        context,
+        title: "Couldn't add to bag",
+        message: 'Please try again.',
+      );
+    }
   }
 
   // ---------- PRODUCT GRID ----------
   Widget _buildProductGrid() {
+    if (_isLoading) {
+      return const SliverToBoxAdapter(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 60),
+          child: Center(child: CircularProgressIndicator(color: AppColors.accent)),
+        ),
+      );
+    }
+    if (products.isEmpty) {
+      return const SliverToBoxAdapter(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 40),
+          child: Center(
+            child: Text('No products found', style: TextStyle(color: AppColors.textGrey)),
+          ),
+        ),
+      );
+    }
     return SliverGrid(
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
@@ -331,7 +330,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 children: [
                   ClipRRect(
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                    child: Image.asset(product.image, fit: BoxFit.cover),
+                    child: Image(image: product.imageProvider, fit: BoxFit.cover),
                   ),
                   Positioned(
                     top: 8,

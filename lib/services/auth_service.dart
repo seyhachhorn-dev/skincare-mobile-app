@@ -8,6 +8,8 @@ import 'package:skincare_app/constant/api_constants.dart';
 import 'package:skincare_app/constant/app_colors.dart';
 import 'package:skincare_app/constant/app_string.dart';
 import 'package:skincare_app/model/auth_model.dart';
+import 'package:skincare_app/services/cart_service.dart';
+import 'package:skincare_app/services/favorites_service.dart';
 
 /// Auth-related actions shared across screens (Profile tile, drawer, etc).
 class AuthService {
@@ -93,6 +95,8 @@ class AuthService {
     // from logging out locally if the network call fails/times out.
     await instance._revokeToken();
     await _clearToken();
+    CartService.instance.reset();
+    FavoritesService.instance.reset();
 
     if (!context.mounted) return;
     Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);

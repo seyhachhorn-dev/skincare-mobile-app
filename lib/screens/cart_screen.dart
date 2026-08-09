@@ -17,6 +17,15 @@ class _CartScreenState extends State<CartScreen> {
   int currentTab = 3; // Bag tab active
 
   @override
+  void initState() {
+    super.initState();
+    // Defensive re-fetch: home_screen.dart already loads this on the
+    // normal login → home path, but this covers reaching Cart any other
+    // way with state that's gone stale.
+    CartService.instance.load();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
@@ -138,7 +147,7 @@ class _CartScreenState extends State<CartScreen> {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
-            child: Image.asset(item.product.image, width: 64, height: 64, fit: BoxFit.cover),
+            child: Image(image: item.product.imageProvider, width: 64, height: 64, fit: BoxFit.cover),
           ),
           const SizedBox(width: 12),
           Expanded(

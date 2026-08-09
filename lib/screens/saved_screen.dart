@@ -21,6 +21,15 @@ class _SavedScreenState extends State<SavedScreen> {
   int currentTab = 2; // Saved tab active
 
   @override
+  void initState() {
+    super.initState();
+    // Defensive re-fetch: home_screen.dart already loads this on the
+    // normal login → home path, but this covers reaching Saved any
+    // other way with state that's gone stale.
+    FavoritesService.instance.load();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
@@ -121,13 +130,22 @@ class _SavedScreenState extends State<SavedScreen> {
   }
 
   // ---------- ADD TO CART (quick-add from the product card) ----------
-  void _addToCart(Product product) {
-    CartService.instance.addToCart(product);
-    AppSnackBar.success(
-      context,
-      title: 'Added to bag',
-      message: '${product.name} added to your bag',
-    );
+  Future<void> _addToCart(Product product) async {
+    final added = await CartService.instance.addToCart(product);
+    if (!mounted) return;
+    if (added) {
+      AppSnackBar.success(
+        context,
+        title: 'Added to bag',
+        message: '${product.name} added to your bag',
+      );
+    } else {
+      AppSnackBar.error(
+        context,
+        title: "Couldn't add to bag",
+        message: 'Please try again.',
+      );
+    }
   }
 
   // ---------- PRODUCT CARD ----------
@@ -158,7 +176,7 @@ class _SavedScreenState extends State<SavedScreen> {
                 children: [
                   ClipRRect(
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                    child: Image.asset(product.image, fit: BoxFit.cover),
+                    child: Image(image: product.imageProvider, fit: BoxFit.cover),
                   ),
                   Positioned(
                     top: 8,

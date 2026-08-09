@@ -1,27 +1,17 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:skincare_app/constant/app_colors.dart';
 import 'package:skincare_app/constant/app_string.dart';
-import 'package:skincare_app/services/cart_service.dart';
+import 'package:skincare_app/model/order.dart';
 
 class ThankYouScreen extends StatefulWidget {
-  final int pointsEarned;
-  const ThankYouScreen({super.key, required this.pointsEarned});
+  final Order order;
+  const ThankYouScreen({super.key, required this.order});
 
   @override
   State<ThankYouScreen> createState() => _ThankYouScreenState();
 }
 
 class _ThankYouScreenState extends State<ThankYouScreen> {
-  late final String _orderNumber = "FD${10000000 + Random().nextInt(89999999)}";
-
-  @override
-  void initState() {
-    super.initState();
-    CartService.instance.clear();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -43,7 +33,7 @@ class _ThankYouScreenState extends State<ThankYouScreen> {
               ),
               const SizedBox(height: 10),
               Text(
-                "Your order #$_orderNumber is confirmed and in processing.",
+                "Your order #${widget.order.orderNumber} is confirmed and in processing.",
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 13, color: AppColors.textGrey, height: 1.4),
               ),
@@ -52,7 +42,7 @@ class _ThankYouScreenState extends State<ThankYouScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                 decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(30)),
                 child: Text(
-                  "You have earned ${widget.pointsEarned} points!",
+                  "You have earned ${widget.order.pointsEarned} points!",
                   style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textDark),
                 ),
               ),
@@ -123,8 +113,11 @@ class _ThankYouScreenState extends State<ThankYouScreen> {
           context: context,
           builder: (context) => AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: Text("Order #$_orderNumber"),
-            content: Text("You earned ${widget.pointsEarned} points on this order."),
+            title: Text("Order #${widget.order.orderNumber}"),
+            content: Text(
+              "${widget.order.itemCount} item${widget.order.itemCount == 1 ? '' : 's'} · "
+              "\$${widget.order.total}.00 USD\nYou earned ${widget.order.pointsEarned} points on this order.",
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),

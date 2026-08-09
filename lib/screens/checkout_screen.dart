@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:skincare_app/constant/app_colors.dart';
 import 'package:skincare_app/constant/app_string.dart';
+import 'package:skincare_app/model/address_model.dart';
+import 'package:skincare_app/screens/address_screen.dart';
 import 'package:skincare_app/screens/thank_you_screen.dart';
+import 'package:skincare_app/services/address_service.dart';
 import 'package:skincare_app/services/cart_service.dart';
+import 'package:skincare_app/services/order_service.dart';
+import 'package:skincare_app/widgets/app_snackbar.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -12,8 +17,85 @@ class CheckoutScreen extends StatefulWidget {
 }
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
+  static const List<String> _paymentMethods = ['apple_pay', 'paypal'];
+  static const List<String> _shippingMethods = ['dhl', 'inpost'];
+
   int _selectedPayment = 0; // 0 = Apple Pay, 1 = PayPal
   int _selectedShipping = 1; // 0 = DHL, 1 = InPost
+
+  Address? _address;
+  bool _isLoadingAddress = true;
+  bool _isPlacingOrder = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAddress();
+  }
+
+  Future<void> _loadAddress() async {
+    final response = await AddressService.instance.list();
+    if (!mounted) return;
+
+    Address? picked;
+    if (response.status && response.addresses.isNotEmpty) {
+      picked = response.addresses.firstWhere(
+        (a) => a.isDefault,
+        orElse: () => response.addresses.first,
+      );
+    }
+    setState(() {
+      _address = picked;
+      _isLoadingAddress = false;
+    });
+  }
+
+  Future<void> _editAddress() async {
+    await Navigator.push(context, MaterialPageRoute(builder: (context) => const AddressScreen()));
+    if (!mounted) return;
+    setState(() => _isLoadingAddress = true);
+    _loadAddress();
+  }
+
+  Future<void> _placeOrder() async {
+    if (_isPlacingOrder) return;
+
+    if (_address == null) {
+      AppSnackBar.error(
+        context,
+        title: 'No address yet',
+        message: 'Add a shipping address before placing an order.',
+      );
+      return;
+    }
+
+    setState(() => _isPlacingOrder = true);
+    final response = await OrderService.instance.placeOrder(
+      addressId: _address!.id,
+      paymentMethod: _paymentMethods[_selectedPayment],
+      shippingMethod: _shippingMethods[_selectedShipping],
+    );
+    if (!mounted) return;
+
+    if (!response.status || response.order == null) {
+      setState(() => _isPlacingOrder = false);
+      AppSnackBar.error(
+        context,
+        title: "Couldn't place order",
+        message: response.message.isNotEmpty ? response.message : 'Please try again.',
+      );
+      return;
+    }
+
+    // The server already emptied the cart as part of placing the order —
+    // mirror that locally instead of another round trip.
+    CartService.instance.clear();
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => ThankYouScreen(order: response.order!)),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +111,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildSectionHeader(AppString.shippingInformation, AppString.edit),
+                    _buildSectionHeader(AppString.shippingInformation, AppString.edit, onAction: _editAddress),
                     const SizedBox(height: 10),
                     _buildAddressCard(),
                     const SizedBox(height: 24),
@@ -105,44 +187,68 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  Widget _buildSectionHeader(String title, String action) {
+  Widget _buildSectionHeader(String title, String action, {VoidCallback? onAction}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textDark)),
-        Text(action, style: const TextStyle(fontSize: 13, color: AppColors.textGrey)),
+        GestureDetector(
+          onTap: onAction,
+          child: Text(action, style: const TextStyle(fontSize: 13, color: AppColors.textGrey)),
+        ),
       ],
     );
   }
 
   // ---------- ADDRESS CARD ----------
   Widget _buildAddressCard() {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(Icons.location_on_outlined, color: AppColors.textDark),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Work", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textDark)),
-                SizedBox(height: 4),
-                Text(
-                  "357 Maple Street, Apartment 2B, New York, NY 10013",
-                  style: TextStyle(fontSize: 13, color: AppColors.textGrey, height: 1.4),
-                ),
-              ],
+    if (_isLoadingAddress) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 12),
+        child: Center(child: CircularProgressIndicator(color: AppColors.accent)),
+      );
+    }
+
+    final address = _address;
+    return GestureDetector(
+      onTap: _editAddress,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.location_on_outlined, color: AppColors.textDark),
+            const SizedBox(width: 12),
+            Expanded(
+              child: address == null
+                  ? const Text(
+                      "No address yet — tap to add one",
+                      style: TextStyle(fontSize: 13, color: AppColors.textGrey, height: 1.4),
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          address.type.isEmpty
+                              ? "Address"
+                              : "${address.type[0].toUpperCase()}${address.type.substring(1)}",
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textDark),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          address.formatted,
+                          style: const TextStyle(fontSize: 13, color: AppColors.textGrey, height: 1.4),
+                        ),
+                      ],
+                    ),
             ),
-          ),
-          const Icon(Icons.keyboard_arrow_down, color: AppColors.textGrey),
-        ],
+            const Icon(Icons.keyboard_arrow_down, color: AppColors.textGrey),
+          ],
+        ),
       ),
     );
   }
@@ -230,21 +336,21 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         width: double.infinity,
         height: 52,
         child: ElevatedButton(
-          onPressed: () {
-            final points = CartService.instance.pointsEarned;
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => ThankYouScreen(pointsEarned: points)),
-            );
-          },
+          onPressed: _isPlacingOrder ? null : _placeOrder,
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.textDark,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
           ),
-          child: const Text(
-            AppString.placeAnOrder,
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white),
-          ),
+          child: _isPlacingOrder
+              ? const SizedBox(
+                  height: 22,
+                  width: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                )
+              : const Text(
+                  AppString.placeAnOrder,
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white),
+                ),
         ),
       ),
     );
