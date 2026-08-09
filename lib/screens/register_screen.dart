@@ -2,8 +2,86 @@ import 'package:flutter/material.dart';
 import 'package:skincare_app/constant/app_colors.dart';
 import 'package:skincare_app/constant/app_string.dart';
 
-class RegisterScreen extends StatelessWidget {
+// TODO: Make sure to import your service here. Adjust the path if necessary.
+import 'package:skincare_app/services/auth_service.dart';
+
+class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
+
+  @override
+  State<RegisterScreen> createState() => _RegisterScreenState();
+}
+
+class _RegisterScreenState extends State<RegisterScreen> {
+  // 1. Controllers to read text from the TextFields
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+
+  // 2. Initialize the service and loading state
+  final AuthService _authService = AuthService.instance;
+  bool _isLoading = false;
+
+  // 3. The function to handle the registration button press
+  Future<void> _handleRegister() async {
+    // Basic validation
+    if (_nameController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _passwordController.text.isEmpty) {
+      _showMessage("Please fill in all fields.");
+      return;
+    }
+
+    if (_passwordController.text != _confirmPasswordController.text) {
+      _showMessage("Passwords do not match.");
+      return;
+    }
+
+    // Start loading
+    setState(() {
+      _isLoading = true;
+    });
+
+    // Call the API service
+    final response = await _authService.register(
+      name: _nameController.text.trim(),
+      email: _emailController.text.trim(),
+      password: _passwordController.text,
+      passwordConfirmation: _confirmPasswordController.text,
+    );
+
+    // Stop loading
+    if (!mounted) return;
+    setState(() {
+      _isLoading = false;
+    });
+
+    // Handle the response
+    if (response.status) {
+      _showMessage(response.message); // e.g., "Registration successful"
+      Navigator.pushReplacementNamed(context, "/login");
+    } else {
+      _showMessage(response.message); // e.g., "Email already taken"
+    }
+  }
+
+  // Helper function to show SnackBar messages
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  @override
+  void dispose() {
+    // Always dispose controllers to prevent memory leaks
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +92,6 @@ class RegisterScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
             children: [
-
               const SizedBox(height: 40),
 
               // BRAND NAME
@@ -51,8 +128,9 @@ class RegisterScreen extends StatelessWidget {
 
               const SizedBox(height: 32),
 
-              // Name FIELD
+              // NAME FIELD
               TextField(
+                controller: _nameController, // Attached controller
                 decoration: InputDecoration(
                   hintText: AppString.name,
                   prefixIcon: const Icon(Icons.person_outline),
@@ -65,14 +143,15 @@ class RegisterScreen extends StatelessWidget {
                 ),
               ),
 
-            const SizedBox(height: 16),
-
+              const SizedBox(height: 16),
 
               // EMAIL FIELD
               TextField(
+                controller: _emailController, // Attached controller
+                keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                   hintText: AppString.email,
-                  prefixIcon: const Icon(Icons.person_outline),
+                  prefixIcon: const Icon(Icons.email_outlined),
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
@@ -86,7 +165,8 @@ class RegisterScreen extends StatelessWidget {
 
               // PASSWORD FIELD
               TextField(
-                obscureText: true, // hides the password
+                controller: _passwordController, // Attached controller
+                obscureText: true,
                 decoration: InputDecoration(
                   hintText: AppString.password,
                   prefixIcon: const Icon(Icons.key_outlined),
@@ -99,13 +179,12 @@ class RegisterScreen extends StatelessWidget {
                 ),
               ),
 
-
-              
               const SizedBox(height: 16),
 
-              // PASSWORD FIELD
+              // CONFIRM PASSWORD FIELD
               TextField(
-                obscureText: true, // hides the password
+                controller: _confirmPasswordController, // Attached controller
+                obscureText: true,
                 decoration: InputDecoration(
                   hintText: "Confirm Password",
                   prefixIcon: const Icon(Icons.key_outlined),
@@ -118,36 +197,37 @@ class RegisterScreen extends StatelessWidget {
                 ),
               ),
 
+              const SizedBox(height: 32),
 
-              const SizedBox(height: 8),
-
-              // SIGN Up BUTTON
+              // SIGN UP BUTTON
               SizedBox(
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // later: call register API
-                  },
+                  // Disable button while loading
+                  onPressed: _isLoading ? null : _handleRegister,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(28),
                     ),
                   ),
-                  child: const Text(
-                    "Sign Up",
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white,
-                    ),
-                  ),
+                  // Show loading spinner or text based on state
+                  child: _isLoading 
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
+                          "Sign Up",
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
+                        ),
                 ),
               ),
 
               const SizedBox(height: 20),
 
-              // CREATE ONE
+              // LOGIN INSTEAD
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -173,7 +253,7 @@ class RegisterScreen extends StatelessWidget {
 
               const SizedBox(height: 32),
 
-              // OR SIGN Up WITH
+              // OR SIGN UP WITH
               const Text(
                 "Or sign up with",
                 style: TextStyle(color: AppColors.textGrey),
@@ -192,7 +272,6 @@ class RegisterScreen extends StatelessWidget {
               ),
 
               const SizedBox(height: 40),
-
             ],
           ),
         ),
