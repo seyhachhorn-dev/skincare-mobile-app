@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:skincare_app/constant/app_colors.dart';
 import 'package:skincare_app/constant/app_string.dart';
-
-// TODO: Make sure to import your service here. Adjust the path if necessary.
 import 'package:skincare_app/services/auth_service.dart';
+import 'package:skincare_app/widgets/app_snackbar.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -29,12 +28,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (_nameController.text.isEmpty ||
         _emailController.text.isEmpty ||
         _passwordController.text.isEmpty) {
-      _showMessage("Please fill in all fields.");
+      AppSnackBar.error(context, title: 'Missing info', message: 'Please fill in all fields.');
       return;
     }
 
     if (_passwordController.text != _confirmPasswordController.text) {
-      _showMessage("Passwords do not match.");
+      AppSnackBar.error(context, title: 'Passwords don\'t match', message: 'Make sure both passwords are the same.');
       return;
     }
 
@@ -59,18 +58,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     // Handle the response
     if (response.status) {
-      _showMessage(response.message); // e.g., "Registration successful"
+      AppSnackBar.success(context, title: 'Account created', message: response.message);
       Navigator.pushReplacementNamed(context, "/login");
     } else {
-      _showMessage(response.message); // e.g., "Email already taken"
+      AppSnackBar.error(context, title: 'Registration failed', message: response.message);
     }
-  }
-
-  // Helper function to show SnackBar messages
-  void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
   }
 
   @override

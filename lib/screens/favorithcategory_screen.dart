@@ -10,18 +10,29 @@ class FavoriteCategory extends StatefulWidget {
   State<FavoriteCategory> createState() => _FavoriteCategoryState();
 }
 
+class _CategoryOption {
+  final IconData icon;
+  final String name;
+  const _CategoryOption(this.icon, this.name);
+}
+
 class _FavoriteCategoryState extends State<FavoriteCategory> {
-  final List<Map<String, String>> categories = [
-    {"icon": "🧴", "name": "Show All"},
-    {"icon": "🌸", "name": "Perfume"},
-    {"icon": "🧴", "name": "Moisturizer"},
-    {"icon": "🧴", "name": "Shampoo"},
-    {"icon": "🎁", "name": "Gift Cards"},
-    {"icon": "💧", "name": "Toner"},
-    {"icon": "🫗", "name": "Face oils"},
-    {"icon": "💄", "name": "Foundation"},
-    {"icon": "🧴", "name": "Suncare"},
-    {"icon": "🪮", "name": "Tools"},
+  // Material Icons instead of raw emoji — emoji glyphs depend on the
+  // device's OS/OEM font, and several here (🧴 lotion bottle, 🪮 hair pick)
+  // are recent enough Unicode additions that many Android devices render
+  // them as blank "tofu" boxes. Icons are bundled with Flutter itself, so
+  // they render identically on every device.
+  final List<_CategoryOption> categories = const [
+    _CategoryOption(Icons.apps_rounded, "Show All"),
+    _CategoryOption(Icons.local_florist_outlined, "Perfume"),
+    _CategoryOption(Icons.spa_outlined, "Moisturizer"),
+    _CategoryOption(Icons.shower_outlined, "Shampoo"),
+    _CategoryOption(Icons.card_giftcard_outlined, "Gift Cards"),
+    _CategoryOption(Icons.water_drop_outlined, "Toner"),
+    _CategoryOption(Icons.opacity_outlined, "Face oils"),
+    _CategoryOption(Icons.brush_outlined, "Foundation"),
+    _CategoryOption(Icons.wb_sunny_outlined, "Suncare"),
+    _CategoryOption(Icons.build_outlined, "Tools"),
   ];
 
   final Set<String> selected = {};
@@ -62,8 +73,8 @@ class _FavoriteCategoryState extends State<FavoriteCategory> {
                 runSpacing: 16, //for vertical gap
                 alignment: WrapAlignment.center,
                 children: categories.map((category) {
-                  final name = category["name"]!;
-                  final icon = category["icon"]!;
+                  final name = category.name;
+                  final icon = category.icon;
                   final isSelected = selected.contains(name);
                   return GestureDetector(
                     onTap: () {
@@ -92,9 +103,10 @@ class _FavoriteCategoryState extends State<FavoriteCategory> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
+                          Icon(
                             icon,
-                            style: const TextStyle(fontSize: 20),
+                            size: 20,
+                            color: isSelected ? Colors.white : AppColors.textDark,
                           ),
                           const SizedBox(width: 8),
                           Text(

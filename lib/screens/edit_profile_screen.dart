@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:skincare_app/constant/app_colors.dart';
 import 'package:skincare_app/constant/app_string.dart';
+import 'package:skincare_app/widgets/app_snackbar.dart';
 
 /// Simple edit form for the profile's name/email/avatar. Returns a
 /// map of the updated values via [Navigator.pop] when saved.
@@ -51,12 +52,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       setState(() => _imagePath = picked.path);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Couldn't open ${source == ImageSource.camera ? 'camera' : 'gallery'} on this device"),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: AppColors.textDark,
-        ),
+      AppSnackBar.error(
+        context,
+        title: 'Unavailable',
+        message: "Couldn't open ${source == ImageSource.camera ? 'camera' : 'gallery'} on this device",
       );
     }
   }

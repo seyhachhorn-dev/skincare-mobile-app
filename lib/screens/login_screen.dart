@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:skincare_app/constant/app_colors.dart';
 import 'package:skincare_app/constant/app_string.dart';
-
-// TODO: Make sure to import your service here
 import 'package:skincare_app/services/auth_service.dart';
+import 'package:skincare_app/widgets/app_snackbar.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -26,7 +25,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _handleLogin() async {
     // Basic validation
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      _showMessage("Please enter your email and password.");
+      AppSnackBar.error(context, title: 'Missing info', message: 'Please enter your email and password.');
       return;
     }
 
@@ -47,25 +46,14 @@ class _LoginScreenState extends State<LoginScreen> {
       _isLoading = false;
     });
 
-    // Handle the response
+    // Handle the response. AuthService already persisted the token to
+    // SharedPreferences internally on success, before returning here.
     if (response.status) {
-      _showMessage(response.message); // e.g., "Login successful"
-      
-      // TODO: Save the response.token somewhere securely so the user stays logged in!
-      // print("Token: ${response.token}");
-
-      // Navigate to the next screen (e.g., your favorite screen)
+      AppSnackBar.success(context, title: 'Welcome back!', message: response.message);
       Navigator.pushReplacementNamed(context, "/favorite");
     } else {
-      _showMessage(response.message); // e.g., "Invalid credentials"
+      AppSnackBar.error(context, title: 'Login failed', message: response.message);
     }
-  }
-
-  // Helper function to show SnackBar messages
-  void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
   }
 
   @override

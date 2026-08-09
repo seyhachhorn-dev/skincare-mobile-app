@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:skincare_app/constant/app_colors.dart';
 import 'package:skincare_app/constant/app_string.dart';
+import 'package:skincare_app/widgets/app_snackbar.dart';
 
 /// Full address form — province/district/commune, house number, nearby
 /// pickup point, address type, and default toggle. All location fields
@@ -50,13 +51,7 @@ class _AddressScreenState extends State<AddressScreen> {
 
   void _save() {
     if (_houseNoController.text.trim().isEmpty || _communeController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(AppString.incompleteAddress),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: AppColors.textDark,
-        ),
-      );
+      AppSnackBar.error(context, title: 'Incomplete address', message: AppString.incompleteAddress);
       return;
     }
 

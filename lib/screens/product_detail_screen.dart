@@ -5,6 +5,7 @@ import 'package:skincare_app/constant/app_string.dart';
 import 'package:skincare_app/model/product.dart';
 import 'package:skincare_app/services/cart_service.dart';
 import 'package:skincare_app/services/favorites_service.dart';
+import 'package:skincare_app/widgets/app_snackbar.dart';
 import 'package:skincare_app/widgets/svg_icon.dart';
 
 /// Full-screen product detail page — works for any [Product] passed to it.
@@ -333,12 +334,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             child: ElevatedButton.icon(
               onPressed: () {
                 CartService.instance.addToCart(widget.product, quantity: _quantity);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text("${widget.product.name} added to your bag"),
-                    behavior: SnackBarBehavior.floating,
-                    backgroundColor: AppColors.textDark,
-                  ),
+                AppSnackBar.success(
+                  context,
+                  title: 'Added to bag',
+                  message: '${widget.product.name} added to your bag',
                 );
                 Navigator.pop(context);
               },

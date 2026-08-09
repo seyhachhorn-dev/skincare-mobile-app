@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:skincare_app/constant/app_colors.dart';
 import 'package:skincare_app/constant/app_string.dart';
+import 'package:skincare_app/widgets/app_snackbar.dart';
 
 class HelpSupportScreen extends StatefulWidget {
   const HelpSupportScreen({super.key});
@@ -49,23 +50,11 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
 
   void _copyEmail() {
     Clipboard.setData(const ClipboardData(text: AppString.supportEmail));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(AppString.emailCopied),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: AppColors.textDark,
-      ),
-    );
+    AppSnackBar.success(context, title: 'Copied', message: AppString.emailCopied);
   }
 
   void _showChatComingSoon() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(AppString.liveChatComingSoon),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: AppColors.textDark,
-      ),
-    );
+    AppSnackBar.info(context, title: 'Coming soon', message: AppString.liveChatComingSoon);
   }
 
   @override

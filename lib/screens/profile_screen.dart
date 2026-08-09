@@ -8,6 +8,7 @@ import 'package:skincare_app/screens/edit_profile_screen.dart';
 import 'package:skincare_app/screens/help_support_screen.dart';
 import 'package:skincare_app/screens/order_history_screen.dart';
 import 'package:skincare_app/services/auth_service.dart';
+import 'package:skincare_app/widgets/app_snackbar.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -17,13 +18,48 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // Mock data for now — later comes from AuthService / API
-  String name = "XioFik Hasan";
-  String email = "xiofik.hasan@email.com";
+  // Placeholder text shown briefly while the real profile loads.
+  String name = "";
+  String email = "";
   String location = "Sterling, Brooklyn";
   String? avatarImagePath;
+  int ordersCount = 0;
+  int pointsBalance = 0;
+  bool _isLoadingProfile = true;
 
   bool _isHireMode = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    final response = await AuthService.instance.me();
+    if (!mounted) return;
+
+    if (!response.status || response.user == null) {
+      // No/expired token, or the request failed outright (e.g. unreachable
+      // backend) — either way there's no profile to show. Surface why
+      // before redirecting, rather than silently bouncing to login.
+      AppSnackBar.error(
+        context,
+        title: 'Session expired',
+        message: response.message.isNotEmpty ? response.message : 'Please log in again.',
+      );
+      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+      return;
+    }
+
+    setState(() {
+      name = response.user!.name;
+      email = response.user!.email;
+      pointsBalance = response.user!.pointsBalance;
+      ordersCount = response.user!.ordersCount ?? 0;
+      _isLoadingProfile = false;
+    });
+  }
 
   Future<void> _openEditProfile() async {
     final result = await Navigator.push<Map<String, String?>>(
@@ -162,14 +198,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     child: Column(
                       children: [
-                        Text(
-                          name,
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textDark,
-                          ),
-                        ),
+                        _isLoadingProfile
+                            ? const SizedBox(
+                                height: 22,
+                                width: 22,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accent),
+                              )
+                            : Text(
+                                name,
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textDark,
+                                ),
+                              ),
                         const SizedBox(height: 4),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -190,9 +232,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
-                            _buildStatItem('Orders', '12',
+                            _buildStatItem('Orders', '$ordersCount',
                                 Icons.shopping_bag_outlined, AppColors.accent),
-                            _buildStatItem('Points', '450',
+                            _buildStatItem('Points', '$pointsBalance',
                                 Icons.stars_rounded, Colors.amber),
                           ],
                         ),

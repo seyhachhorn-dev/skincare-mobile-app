@@ -8,7 +8,14 @@ import 'package:skincare_app/services/cart_service.dart';
 import 'package:skincare_app/services/favorites_service.dart';
 import 'package:skincare_app/widgets/app_bottom_nav.dart';
 import 'package:skincare_app/widgets/app_drawer.dart';
+import 'package:skincare_app/widgets/app_snackbar.dart';
 import 'package:skincare_app/widgets/svg_icon.dart';
+
+class _CategoryOption {
+  final IconData icon;
+  final String name;
+  const _CategoryOption(this.icon, this.name);
+}
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
@@ -25,14 +32,18 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
   final List<String> filters = ["Trending", "New Products", "Highly Rated"];
 
-  final List<Map<String, String>> categories = [
-    {"icon": "🧴", "name": "All"},
-    {"icon": "💧", "name": "Toner"},
-    {"icon": "🌸", "name": "Serum"},
-    {"icon": "🫗", "name": "Face Oil"},
-    {"icon": "🧼", "name": "Cleanser"},
-    {"icon": "☀️", "name": "Suncare"},
-    {"icon": "💄", "name": "Makeup"},
+  // Material Icons instead of raw emoji — several of the previous emoji
+  // (🧴 🧼) are recent enough Unicode additions that they render as blank
+  // "tofu" boxes on some Android devices' OS/OEM emoji fonts. Icons are
+  // bundled with Flutter itself, so they render identically everywhere.
+  final List<_CategoryOption> categories = const [
+    _CategoryOption(Icons.apps_rounded, "All"),
+    _CategoryOption(Icons.water_drop_outlined, "Toner"),
+    _CategoryOption(Icons.science_outlined, "Serum"),
+    _CategoryOption(Icons.opacity_outlined, "Face Oil"),
+    _CategoryOption(Icons.clean_hands_outlined, "Cleanser"),
+    _CategoryOption(Icons.wb_sunny_outlined, "Suncare"),
+    _CategoryOption(Icons.brush_outlined, "Makeup"),
   ];
 
   // Fake products for now — later this comes from your API
@@ -204,12 +215,16 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       shape: BoxShape.circle,
                     ),
                     child: Center(
-                      child: Text(category["icon"]!, style: const TextStyle(fontSize: 24)),
+                      child: Icon(
+                        category.icon,
+                        size: 24,
+                        color: isActive ? AppColors.accent : AppColors.textGrey,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    category["name"]!,
+                    category.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -266,12 +281,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
   // ---------- ADD TO CART (quick-add from the product card) ----------
   void _addToCart(Product product) {
     CartService.instance.addToCart(product);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("${product.name} added to your bag"),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: AppColors.textDark,
-      ),
+    AppSnackBar.success(
+      context,
+      title: 'Added to bag',
+      message: '${product.name} added to your bag',
     );
   }
 

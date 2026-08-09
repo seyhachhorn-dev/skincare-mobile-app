@@ -8,6 +8,7 @@ import 'package:skincare_app/services/cart_service.dart';
 import 'package:skincare_app/services/favorites_service.dart';
 import 'package:skincare_app/widgets/app_bottom_nav.dart';
 import 'package:skincare_app/widgets/app_drawer.dart';
+import 'package:skincare_app/widgets/app_snackbar.dart';
 import 'package:skincare_app/widgets/svg_icon.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -221,12 +222,10 @@ class _HomeScreenState extends State<HomeScreen> {
   // ---------- ADD TO CART (quick-add from the product card) ----------
   void _addToCart(Product product) {
     CartService.instance.addToCart(product);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("${product.name} added to your bag"),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: AppColors.textDark,
-      ),
+    AppSnackBar.success(
+      context,
+      title: 'Added to bag',
+      message: '${product.name} added to your bag',
     );
   }
 
