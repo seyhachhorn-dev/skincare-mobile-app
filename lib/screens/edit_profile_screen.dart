@@ -4,20 +4,22 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:skincare_app/constant/app_colors.dart';
 import 'package:skincare_app/constant/app_string.dart';
+import 'package:skincare_app/services/auth_service.dart';
 import 'package:skincare_app/widgets/app_snackbar.dart';
 
-/// Simple edit form for the profile's name/email/avatar. Returns a
-/// map of the updated values via [Navigator.pop] when saved.
+/// Edit form for the profile's name/email/avatar. Saves via
+/// PATCH /profile and returns the confirmed server values (not just
+/// local input) via [Navigator.pop] when saved.
 class EditProfileScreen extends StatefulWidget {
   final String name;
   final String email;
-  final String? imagePath;
+  final String? avatarUrl;
 
   const EditProfileScreen({
     super.key,
     required this.name,
     required this.email,
-    this.imagePath,
+    this.avatarUrl,
   });
 
   @override
@@ -29,13 +31,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late final TextEditingController _emailController = TextEditingController(text: widget.email);
   final _formKey = GlobalKey<FormState>();
 
-  String? _imagePath;
-
-  @override
-  void initState() {
-    super.initState();
-    _imagePath = widget.imagePath;
-  }
+  // A freshly picked local file awaiting upload. Until Save succeeds,
+  // the server-side avatar (widget.avatarUrl) is unchanged.
+  File? _pickedImage;
+  bool _isSaving = false;
 
   @override
   void dispose() {
@@ -49,7 +48,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     try {
       final picked = await ImagePicker().pickImage(source: source, imageQuality: 85);
       if (picked == null || !mounted) return;
-      setState(() => _imagePath = picked.path);
+      setState(() => _pickedImage = File(picked.path));
     } catch (e) {
       if (!mounted) return;
       AppSnackBar.error(
@@ -81,12 +80,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 title: const Text("Choose from Gallery"),
                 onTap: () => _pickImage(ImageSource.gallery),
               ),
-              if (_imagePath != null)
+              if (_pickedImage != null)
                 ListTile(
                   leading: const Icon(Icons.delete_outline, color: AppColors.error),
                   title: const Text("Remove Photo", style: TextStyle(color: AppColors.error)),
                   onTap: () {
-                    setState(() => _imagePath = null);
+                    setState(() => _pickedImage = null);
                     Navigator.pop(context);
                   },
                 ),
@@ -98,12 +97,31 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  void _save() {
-    if (!_formKey.currentState!.validate()) return;
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate() || _isSaving) return;
+
+    setState(() => _isSaving = true);
+    final response = await AuthService.instance.updateProfile(
+      name: _nameController.text.trim(),
+      email: _emailController.text.trim(),
+      avatar: _pickedImage,
+    );
+    if (!mounted) return;
+
+    if (!response.status || response.user == null) {
+      setState(() => _isSaving = false);
+      AppSnackBar.error(
+        context,
+        title: 'Update failed',
+        message: response.message.isNotEmpty ? response.message : 'Please try again.',
+      );
+      return;
+    }
+
     Navigator.pop(context, {
-      'name': _nameController.text.trim(),
-      'email': _emailController.text.trim(),
-      'imagePath': _imagePath,
+      'name': response.user!.name,
+      'email': response.user!.email,
+      'avatarUrl': response.user!.avatarUrl,
     });
   }
 
@@ -149,15 +167,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         width: double.infinity,
                         height: 52,
                         child: ElevatedButton(
-                          onPressed: _save,
+                          onPressed: _isSaving ? null : _save,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
                           ),
-                          child: const Text(
-                            AppString.saveChanges,
-                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white),
-                          ),
+                          child: _isSaving
+                              ? const SizedBox(
+                                  height: 22,
+                                  width: 22,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                )
+                              : const Text(
+                                  AppString.saveChanges,
+                                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white),
+                                ),
                         ),
                       ),
                     ],
@@ -197,6 +221,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   // ---------- AVATAR PICKER ----------
   Widget _buildAvatarPicker() {
+    final ImageProvider? preview = _pickedImage != null
+        ? FileImage(_pickedImage!)
+        : (widget.avatarUrl != null ? NetworkImage(widget.avatarUrl!) : null);
+
     return GestureDetector(
       onTap: _showImageSourceSheet,
       child: Stack(
@@ -205,8 +233,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           CircleAvatar(
             radius: 50,
             backgroundColor: AppColors.accent.withValues(alpha: 0.15),
-            backgroundImage: _imagePath != null ? FileImage(File(_imagePath!)) : null,
-            child: _imagePath == null
+            backgroundImage: preview,
+            child: preview == null
                 ? const Icon(Icons.person_outline_rounded, size: 50, color: AppColors.accent)
                 : null,
           ),

@@ -1,5 +1,7 @@
 // lib/models/auth_model.dart
 
+import 'package:skincare_app/constant/api_constants.dart';
+
 class User {
   final int id;
   final String name;
@@ -18,6 +20,18 @@ class User {
     required this.pointsBalance,
     this.ordersCount,
   });
+
+  /// The backend stores/returns [avatar] as a relative path (e.g.
+  /// `avatars/xyz.png`), not a full URL, so it can build one regardless
+  /// of which host the API is reached at. Resolve it against the same
+  /// host `ApiConstants.baseUrl` points to rather than `APP_URL`, since
+  /// on a physical device those two can differ (LAN IP vs `localhost`).
+  String? get avatarUrl {
+    if (avatar == null || avatar!.isEmpty) return null;
+    if (avatar!.startsWith('http')) return avatar;
+    final host = ApiConstants.baseUrl.replaceFirst(RegExp(r'/api/?$'), '');
+    return '$host/storage/$avatar';
+  }
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(

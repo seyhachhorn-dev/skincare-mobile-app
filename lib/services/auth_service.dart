@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -209,6 +210,52 @@ class AuthService {
       return MeResponse(status: false, message: 'The server took too long to respond.');
     } catch (e) {
       debugPrint('Error fetching current user: $e');
+      return MeResponse(status: false, message: 'Connection failed. Please check your network.');
+    }
+  }
+
+  /// Updates name/email and, optionally, uploads a new avatar via
+  /// PATCH /profile (multipart/form-data).
+  ///
+  /// Sent as a POST with a `_method=PATCH` field rather than a literal
+  /// PATCH request: PHP only populates `$_FILES` for multipart bodies on
+  /// POST, so a real PATCH would silently drop the file — this is
+  /// Laravel's own documented method-spoofing convention for exactly
+  /// this case.
+  Future<MeResponse> updateProfile({
+    required String name,
+    required String email,
+    File? avatar,
+  }) async {
+    final token = await getToken();
+    if (token == null) {
+      return MeResponse(status: false, message: 'Not logged in.');
+    }
+
+    try {
+      final url = Uri.parse('${ApiConstants.baseUrl}/profile');
+      final request = http.MultipartRequest('POST', url)
+        ..headers['Accept'] = 'application/json'
+        ..headers['Authorization'] = 'Bearer $token'
+        ..fields['_method'] = 'PATCH'
+        ..fields['name'] = name
+        ..fields['email'] = email;
+
+      if (avatar != null) {
+        request.files.add(await http.MultipartFile.fromPath('avatar', avatar.path));
+      }
+
+      final streamed = await request.send().timeout(ApiConstants.requestTimeout);
+      final response = await http.Response.fromStream(streamed);
+
+      final decodedData = jsonDecode(response.body);
+      final success = response.statusCode == 200;
+
+      return MeResponse.fromJson(decodedData, status: success);
+    } on TimeoutException {
+      return MeResponse(status: false, message: 'The server took too long to respond.');
+    } catch (e) {
+      debugPrint('Error updating profile: $e');
       return MeResponse(status: false, message: 'Connection failed. Please check your network.');
     }
   }

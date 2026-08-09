@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:skincare_app/constant/app_colors.dart';
 import 'package:skincare_app/constant/app_string.dart';
@@ -7,6 +5,7 @@ import 'package:skincare_app/screens/address_screen.dart';
 import 'package:skincare_app/screens/edit_profile_screen.dart';
 import 'package:skincare_app/screens/help_support_screen.dart';
 import 'package:skincare_app/screens/order_history_screen.dart';
+import 'package:skincare_app/services/address_service.dart';
 import 'package:skincare_app/services/auth_service.dart';
 import 'package:skincare_app/widgets/app_snackbar.dart';
 
@@ -21,8 +20,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // Placeholder text shown briefly while the real profile loads.
   String name = "";
   String email = "";
-  String location = "Sterling, Brooklyn";
-  String? avatarImagePath;
+  String location = "No address saved";
+  String? avatarUrl;
   int ordersCount = 0;
   int pointsBalance = 0;
   bool _isLoadingProfile = true;
@@ -33,6 +32,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     _loadProfile();
+    _loadDefaultAddress();
+  }
+
+  // Independent of _loadProfile: a missing/failed address fetch shouldn't
+  // block the rest of the profile from showing, so failures are silent.
+  Future<void> _loadDefaultAddress() async {
+    final response = await AddressService.instance.list();
+    if (!mounted || !response.status || response.addresses.isEmpty) return;
+
+    final existing = response.addresses.firstWhere(
+      (a) => a.isDefault,
+      orElse: () => response.addresses.first,
+    );
+    setState(() => location = existing.formatted);
   }
 
   Future<void> _loadProfile() async {
@@ -55,6 +68,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       name = response.user!.name;
       email = response.user!.email;
+      avatarUrl = response.user!.avatarUrl;
       pointsBalance = response.user!.pointsBalance;
       ordersCount = response.user!.ordersCount ?? 0;
       _isLoadingProfile = false;
@@ -65,15 +79,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final result = await Navigator.push<Map<String, String?>>(
       context,
       MaterialPageRoute(
-        builder: (context) => EditProfileScreen(name: name, email: email, imagePath: avatarImagePath),
+        builder: (context) => EditProfileScreen(name: name, email: email, avatarUrl: avatarUrl),
       ),
     );
     if (result == null || !mounted) return;
     setState(() {
       name = result['name'] ?? name;
       email = result['email'] ?? email;
-      avatarImagePath = result['imagePath'];
+      avatarUrl = result['avatarUrl'];
     });
+    AppSnackBar.success(context, message: 'Profile updated');
   }
 
   Future<void> _openLocationEditor() async {
@@ -263,8 +278,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       radius: 46,
                       backgroundColor: AppColors.accent.withValues(alpha: 0.15),
                       backgroundImage:
-                          avatarImagePath != null ? FileImage(File(avatarImagePath!)) : null,
-                      child: avatarImagePath == null
+                          avatarUrl != null ? NetworkImage(avatarUrl!) : null,
+                      child: avatarUrl == null
                           ? const Icon(Icons.person_outline_rounded,
                               size: 50, color: AppColors.accent)
                           : null,

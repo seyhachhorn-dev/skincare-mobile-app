@@ -218,7 +218,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       child: Icon(
                         category.icon,
                         size: 24,
-                        color: isActive ? AppColors.accent : AppColors.textGrey,
+                        color: isActive ? Colors.white : AppColors.textGrey,
                       ),
                     ),
                   ),

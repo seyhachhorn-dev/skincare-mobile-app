@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:skincare_app/constant/app_colors.dart';
 import 'package:skincare_app/constant/app_string.dart';
+import 'package:skincare_app/services/address_service.dart';
 import 'package:skincare_app/widgets/app_snackbar.dart';
 
 /// Full address form — province/district/commune, house number, nearby
 /// pickup point, address type, and default toggle. All location fields
 /// are free text (no province/district/commune API to back a picker
-/// yet). Returns a formatted address string via [Navigator.pop] when saved.
+/// yet). On open, loads the user's existing default address (if any) and
+/// edits it in place; otherwise creates a new one. Returns the saved,
+/// server-confirmed formatted address string via [Navigator.pop].
 class AddressScreen extends StatefulWidget {
   const AddressScreen({super.key});
 
@@ -30,6 +33,9 @@ class _AddressScreenState extends State<AddressScreen> {
 
   int _selectedType = 0;
   bool _isDefault = false;
+  bool _isLoading = true;
+  bool _isSaving = false;
+  int? _editingId;
 
   final _provinceController = TextEditingController();
   final _districtController = TextEditingController();
@@ -37,6 +43,36 @@ class _AddressScreenState extends State<AddressScreen> {
   final _houseNoController = TextEditingController();
   final _pickupPointController = TextEditingController();
   final _locationController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadExistingAddress();
+  }
+
+  Future<void> _loadExistingAddress() async {
+    final response = await AddressService.instance.list();
+    if (!mounted) return;
+
+    if (response.status && response.addresses.isNotEmpty) {
+      final existing = response.addresses.firstWhere(
+        (a) => a.isDefault,
+        orElse: () => response.addresses.first,
+      );
+      _editingId = existing.id;
+      _provinceController.text = existing.province;
+      _districtController.text = existing.district;
+      _communeController.text = existing.commune;
+      _houseNoController.text = existing.houseNo;
+      _pickupPointController.text = existing.pickupPoint ?? '';
+      _locationController.text = existing.location ?? '';
+      _isDefault = existing.isDefault;
+      _selectedType = _types.indexWhere((t) => t.label.toLowerCase() == existing.type);
+      if (_selectedType == -1) _selectedType = 0;
+    }
+
+    setState(() => _isLoading = false);
+  }
 
   @override
   void dispose() {
@@ -49,19 +85,63 @@ class _AddressScreenState extends State<AddressScreen> {
     super.dispose();
   }
 
-  void _save() {
+  Future<void> _save() async {
     if (_houseNoController.text.trim().isEmpty || _communeController.text.trim().isEmpty) {
       AppSnackBar.error(context, title: 'Incomplete address', message: AppString.incompleteAddress);
       return;
     }
+    if (_isSaving) return;
 
-    final parts = [
-      _houseNoController.text.trim(),
-      _communeController.text.trim(),
-      _districtController.text.trim(),
-    ].where((part) => part.isNotEmpty);
+    setState(() => _isSaving = true);
 
-    Navigator.pop(context, parts.join(", "));
+    final type = _types[_selectedType].label.toLowerCase();
+    final params = (
+      province: _provinceController.text.trim(),
+      district: _districtController.text.trim(),
+      commune: _communeController.text.trim(),
+      houseNo: _houseNoController.text.trim(),
+      pickupPoint: _pickupPointController.text.trim(),
+      location: _locationController.text.trim(),
+      type: type,
+      isDefault: _isDefault,
+    );
+
+    final response = _editingId != null
+        ? await AddressService.instance.update(
+            _editingId!,
+            province: params.province,
+            district: params.district,
+            commune: params.commune,
+            houseNo: params.houseNo,
+            pickupPoint: params.pickupPoint,
+            location: params.location,
+            type: params.type,
+            isDefault: params.isDefault,
+          )
+        : await AddressService.instance.create(
+            province: params.province,
+            district: params.district,
+            commune: params.commune,
+            houseNo: params.houseNo,
+            pickupPoint: params.pickupPoint,
+            location: params.location,
+            type: params.type,
+            isDefault: params.isDefault,
+          );
+
+    if (!mounted) return;
+
+    if (!response.status || response.address == null) {
+      setState(() => _isSaving = false);
+      AppSnackBar.error(
+        context,
+        title: 'Save failed',
+        message: response.message.isNotEmpty ? response.message : 'Please try again.',
+      );
+      return;
+    }
+
+    Navigator.pop(context, response.address!.formatted);
   }
 
   @override
@@ -73,7 +153,9 @@ class _AddressScreenState extends State<AddressScreen> {
           children: [
             _buildHeader(),
             Expanded(
-              child: SingleChildScrollView(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator(color: AppColors.accent))
+                  : SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -247,15 +329,21 @@ class _AddressScreenState extends State<AddressScreen> {
         width: double.infinity,
         height: 52,
         child: ElevatedButton(
-          onPressed: _save,
+          onPressed: _isSaving ? null : _save,
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primaryLight,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
           ),
-          child: const Text(
-            AppString.save,
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white),
-          ),
+          child: _isSaving
+              ? const SizedBox(
+                  height: 22,
+                  width: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                )
+              : const Text(
+                  AppString.save,
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white),
+                ),
         ),
       ),
     );
