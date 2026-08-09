@@ -108,4 +108,44 @@ class AuthService {
       );
     }
   }
+
+
+  Future<LoginResponse> login({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final url = Uri.parse(baseAuthUrl + '/login');
+      final response = await http.post(
+        url,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'email': email,
+          'password': password,
+        }),
+      );
+
+      final decodedData = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return LoginResponse.fromJson(decodedData);
+      } else {
+        return LoginResponse(
+          status: false,
+          message:
+              decodedData['message'] ??
+              'Login failed. Please check your credentials.',
+        );
+      }
+    } catch (e) {
+      debugPrint('Error during login: $e');
+      return LoginResponse(
+        status: false,
+        message: 'Connection failed. Please check your network.',
+      );
+    }
+  }
 }

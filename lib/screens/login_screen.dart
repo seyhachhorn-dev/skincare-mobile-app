@@ -2,8 +2,78 @@ import 'package:flutter/material.dart';
 import 'package:skincare_app/constant/app_colors.dart';
 import 'package:skincare_app/constant/app_string.dart';
 
-class LoginScreen extends StatelessWidget {
+// TODO: Make sure to import your service here
+import 'package:skincare_app/services/auth_service.dart';
+
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  // 1. Controllers to read text from the TextFields
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  // 2. Initialize the service and loading state
+  // (Make sure you initialize this the exact same way that fixed your earlier error)
+  final AuthService _authService = AuthService.instance;
+  bool _isLoading = false;
+
+  // 3. The function to handle the login button press
+  Future<void> _handleLogin() async {
+    // Basic validation
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      _showMessage("Please enter your email and password.");
+      return;
+    }
+
+    // Start loading
+    setState(() {
+      _isLoading = true;
+    });
+
+    // Call the API service
+    final response = await _authService.login(
+      email: _emailController.text.trim(),
+      password: _passwordController.text,
+    );
+
+    // Stop loading
+    if (!mounted) return;
+    setState(() {
+      _isLoading = false;
+    });
+
+    // Handle the response
+    if (response.status) {
+      _showMessage(response.message); // e.g., "Login successful"
+      
+      // TODO: Save the response.token somewhere securely so the user stays logged in!
+      // print("Token: ${response.token}");
+
+      // Navigate to the next screen (e.g., your favorite screen)
+      Navigator.pushReplacementNamed(context, "/favorite");
+    } else {
+      _showMessage(response.message); // e.g., "Invalid credentials"
+    }
+  }
+
+  // Helper function to show SnackBar messages
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +84,6 @@ class LoginScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
             children: [
-
               const SizedBox(height: 40),
 
               // BRAND NAME
@@ -53,6 +122,8 @@ class LoginScreen extends StatelessWidget {
 
               // EMAIL FIELD
               TextField(
+                controller: _emailController, // Attached controller
+                keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                   hintText: AppString.email,
                   prefixIcon: const Icon(Icons.person_outline),
@@ -69,6 +140,7 @@ class LoginScreen extends StatelessWidget {
 
               // PASSWORD FIELD
               TextField(
+                controller: _passwordController, // Attached controller
                 obscureText: true, // hides the password
                 decoration: InputDecoration(
                   hintText: AppString.password,
@@ -103,23 +175,22 @@ class LoginScreen extends StatelessWidget {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // later: call login API
-                    Navigator.pushReplacementNamed(context, "/favorite");
-                  },
+                  onPressed: _isLoading ? null : _handleLogin, // Disable while loading
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(28),
                     ),
                   ),
-                  child: const Text(
-                    AppString.signIn,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white,
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
+                          AppString.signIn,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
+                        ),
                 ),
               ),
 
@@ -170,7 +241,6 @@ class LoginScreen extends StatelessWidget {
               ),
 
               const SizedBox(height: 40),
-
             ],
           ),
         ),
