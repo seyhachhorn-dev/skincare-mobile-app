@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:skincare_app/constant/app_colors.dart';
 import 'package:skincare_app/constant/app_string.dart';
@@ -48,7 +49,36 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     try {
       final picked = await ImagePicker().pickImage(source: source, imageQuality: 85);
       if (picked == null || !mounted) return;
-      setState(() => _pickedImage = File(picked.path));
+
+      // Let the user pan/zoom/rotate before it becomes the avatar — a
+      // straight center-crop to a circle otherwise tends to cut off the
+      // top of the subject's head on portrait photos.
+      final cropped = await ImageCropper().cropImage(
+        sourcePath: picked.path,
+        compressFormat: ImageCompressFormat.jpg,
+        compressQuality: 90,
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Adjust Photo',
+            toolbarColor: AppColors.primary,
+            toolbarWidgetColor: Colors.white,
+            activeControlsWidgetColor: AppColors.primary,
+            cropStyle: CropStyle.circle,
+            aspectRatioPresets: [CropAspectRatioPreset.square],
+            lockAspectRatio: true,
+          ),
+          IOSUiSettings(
+            title: 'Adjust Photo',
+            cropStyle: CropStyle.circle,
+            aspectRatioLockEnabled: true,
+            resetAspectRatioEnabled: false,
+            aspectRatioPresets: [CropAspectRatioPreset.square],
+          ),
+        ],
+      );
+      if (cropped == null || !mounted) return;
+
+      setState(() => _pickedImage = File(cropped.path));
     } catch (e) {
       if (!mounted) return;
       AppSnackBar.error(
