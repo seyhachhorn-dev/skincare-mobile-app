@@ -65,6 +65,15 @@ static const String productCollections = "Product collections";
       "Once your order has been processed and shipped, you will receive a confirmation "
       "email with tracking information.";
 
+  // Bakong KHQR payment
+  static const String bakongKhqr = "Bakong KHQR";
+  static const String khqrTitle = "Scan to Pay";
+  static const String khqrInstruction = "Open your banking app and scan this code with Bakong KHQR to complete payment.";
+  static const String khqrWaiting = "Waiting for payment...";
+  static const String khqrAmountDue = "Amount due";
+  static const String khqrCancel = "Cancel payment";
+  static const String khqrPaid = "Payment received!";
+
   // Saved
   static const String savedTitle = "Saved";
   static const String emptySaved = "No saved items yet";

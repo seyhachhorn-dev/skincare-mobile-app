@@ -3,6 +3,7 @@ import 'package:skincare_app/constant/app_colors.dart';
 import 'package:skincare_app/constant/app_string.dart';
 import 'package:skincare_app/model/address_model.dart';
 import 'package:skincare_app/screens/address_screen.dart';
+import 'package:skincare_app/screens/khqr_payment_screen.dart';
 import 'package:skincare_app/screens/thank_you_screen.dart';
 import 'package:skincare_app/services/address_service.dart';
 import 'package:skincare_app/services/cart_service.dart';
@@ -17,10 +18,10 @@ class CheckoutScreen extends StatefulWidget {
 }
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
-  static const List<String> _paymentMethods = ['apple_pay', 'paypal'];
+  static const List<String> _paymentMethods = ['apple_pay', 'paypal', 'bakong_khqr'];
   static const List<String> _shippingMethods = ['dhl', 'inpost'];
 
-  int _selectedPayment = 0; // 0 = Apple Pay, 1 = PayPal
+  int _selectedPayment = 0; // 0 = Apple Pay, 1 = PayPal, 2 = Bakong KHQR
   int _selectedShipping = 1; // 0 = DHL, 1 = InPost
 
   Address? _address;
@@ -91,9 +92,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     // mirror that locally instead of another round trip.
     CartService.instance.clear();
 
+    final order = response.order!;
+    final isBakongKhqr = _paymentMethods[_selectedPayment] == 'bakong_khqr';
+
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => ThankYouScreen(order: response.order!)),
+      MaterialPageRoute(
+        builder: (context) => isBakongKhqr ? KhqrPaymentScreen(order: order) : ThankYouScreen(order: order),
+      ),
     );
   }
 
@@ -127,6 +133,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       index: 1,
                       icon: Icons.account_balance_wallet_outlined,
                       label: "PayPal",
+                    ),
+                    const SizedBox(height: 10),
+                    _buildPaymentOption(
+                      index: 2,
+                      icon: Icons.qr_code_2,
+                      label: AppString.bakongKhqr,
                     ),
                     const SizedBox(height: 24),
                     const Text(

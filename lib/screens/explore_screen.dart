@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:skincare_app/constant/app_colors.dart';
 import 'package:skincare_app/constant/app_icons.dart';
@@ -35,14 +37,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
   // (Material Icons, not the backend's raw emoji) avoids the "tofu box"
   // rendering bug some Android devices hit on newer emoji glyphs.
   List<Category> categories = [Category(id: '', name: 'All')];
-  List<Product> allProducts = [];
+  List<Product> products = [];
   bool _isLoading = true;
 
-  List<Product> get products {
-    if (selectedCategory == 0) return allProducts;
-    final categoryId = categories[selectedCategory].id;
-    return allProducts.where((p) => '${p.categoryId}' == categoryId).toList();
-  }
+  final TextEditingController _searchController = TextEditingController();
+  Timer? _debounce;
 
   @override
   void initState() {
@@ -50,30 +49,53 @@ class _ExploreScreenState extends State<ExploreScreen> {
     _loadExplore();
   }
 
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadExplore() async {
-    final results = await Future.wait([
-      ProductService.instance.list(),
-      CategoryService.instance.list(),
-    ]);
+    final categoryResponse = await CategoryService.instance.list();
+    if (!mounted) return;
+    if (categoryResponse.status) {
+      setState(() => categories = [Category(id: '', name: 'All'), ...categoryResponse.categories]);
+    }
+    await _loadProducts();
+  }
+
+  // Both search and category filtering are done server-side — GET
+  // /api/products already supports combining `search` and `category_id`
+  // in one query, so there's no separate client-side filter step.
+  Future<void> _loadProducts() async {
+    setState(() => _isLoading = true);
+
+    final categoryId = selectedCategory == 0 ? null : int.tryParse(categories[selectedCategory].id);
+    final search = _searchController.text.trim();
+    final response = await ProductService.instance.list(
+      search: search.isEmpty ? null : search,
+      categoryId: categoryId,
+    );
     if (!mounted) return;
 
-    final productResponse = results[0] as ProductListResponse;
-    final categoryResponse = results[1] as CategoryListResponse;
     setState(() {
-      if (productResponse.status) allProducts = productResponse.products;
-      if (categoryResponse.status) {
-        categories = [Category(id: '', name: 'All'), ...categoryResponse.categories];
-      }
+      if (response.status) products = response.products;
       _isLoading = false;
     });
 
-    if (!productResponse.status) {
+    if (!response.status) {
       AppSnackBar.error(
         context,
         title: 'Could not load products',
-        message: productResponse.message.isNotEmpty ? productResponse.message : 'Please try again.',
+        message: response.message.isNotEmpty ? response.message : 'Please try again.',
       );
     }
+  }
+
+  void _onSearchChanged(String value) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 400), _loadProducts);
   }
 
   @override
@@ -144,6 +166,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       child: TextField(
+        controller: _searchController,
+        onChanged: _onSearchChanged,
         decoration: InputDecoration(
           hintText: AppString.exploreSearchHint,
           prefixIcon: Padding(
@@ -173,7 +197,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
           final isActive = selectedCategory == index;
           final category = categories[index];
           return GestureDetector(
-            onTap: () => setState(() => selectedCategory = index),
+            onTap: () {
+              if (selectedCategory == index) return;
+              setState(() => selectedCategory = index);
+              _loadProducts();
+            },
             child: Container(
               width: 68,
               margin: const EdgeInsets.only(right: 12),
