@@ -4,7 +4,6 @@ import 'package:skincare_app/constant/app_string.dart';
 import 'package:skincare_app/model/order.dart';
 import 'package:skincare_app/services/order_service.dart';
 import 'package:skincare_app/utils/money.dart';
-import 'package:skincare_app/widgets/app_snackbar.dart';
 
 class OrderHistoryScreen extends StatefulWidget {
   const OrderHistoryScreen({super.key});
@@ -16,6 +15,7 @@ class OrderHistoryScreen extends StatefulWidget {
 class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   List<Order> _orders = [];
   bool _isLoading = true;
+  bool _hasLoadError = false;
 
   @override
   void initState() {
@@ -24,23 +24,19 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   }
 
   Future<void> _loadOrders() async {
+    setState(() {
+      _isLoading = true;
+      _hasLoadError = false;
+    });
+
     final response = await OrderService.instance.list();
     if (!mounted) return;
 
     setState(() {
       if (response.status) _orders = response.orders;
+      _hasLoadError = !response.status;
       _isLoading = false;
     });
-
-    if (!response.status) {
-      AppSnackBar.error(
-        context,
-        title: 'Could not load orders',
-        message: response.message.isNotEmpty
-            ? response.message
-            : 'Please try again.',
-      );
-    }
   }
 
   @override
@@ -56,6 +52,8 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                   ? const Center(
                       child: CircularProgressIndicator(color: AppColors.accent),
                     )
+                  : _hasLoadError
+                  ? _buildLoadError()
                   : _orders.isEmpty
                   ? _buildEmptyState()
                   : ListView.separated(
@@ -127,6 +125,46 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
               AppString.orderHistoryEmptySub,
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 13, color: AppColors.textGrey),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadError() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 40),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.cloud_off_outlined,
+              size: 52,
+              color: Colors.grey.shade400,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Orders are unavailable right now',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textDark,
+              ),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Please check your connection and try again.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: AppColors.textGrey),
+            ),
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: _loadOrders,
+              icon: const Icon(Icons.refresh_rounded, size: 18),
+              label: const Text('Try again'),
             ),
           ],
         ),

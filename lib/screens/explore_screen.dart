@@ -30,7 +30,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
   int selectedCategory = 0;
   int selectedFilter = 0;
 
-  final List<String> filters = ["Trending", "New Products", "Highly Rated"];
+  final List<String> filters = ["Trending", "New Products"];
+
+  String get _selectedSort => selectedFilter == 0 ? 'trending' : 'new';
 
   // "All" is synthesized locally (id: null) — the backend has no such
   // category, it just means "don't filter". Everything after it comes
@@ -84,6 +86,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
     final response = await ProductService.instance.list(
       search: search.isEmpty ? null : search,
       categoryId: categoryId,
+      sort: _selectedSort,
     );
     if (!mounted) return;
 
@@ -267,7 +270,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
         itemBuilder: (context, index) {
           final isActive = selectedFilter == index;
           return GestureDetector(
-            onTap: () => setState(() => selectedFilter = index),
+            onTap: () {
+              if (selectedFilter == index) return;
+              setState(() => selectedFilter = index);
+              _loadProducts();
+            },
             child: Container(
               margin: const EdgeInsets.only(right: 12),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),

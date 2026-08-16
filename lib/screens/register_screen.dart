@@ -21,6 +21,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // 2. Initialize the service and loading state
   final AuthService _authService = AuthService.instance;
   bool _isLoading = false;
+  bool _isPasswordVisible = false;
+  bool _isConfirmPasswordVisible = false;
 
   // 3. The function to handle the registration button press
   Future<void> _handleRegister() async {
@@ -158,10 +160,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
               // PASSWORD FIELD
               TextField(
                 controller: _passwordController, // Attached controller
-                obscureText: true,
+                obscureText: !_isPasswordVisible,
                 decoration: InputDecoration(
                   hintText: AppString.password,
                   prefixIcon: const Icon(Icons.key_outlined),
+                  suffixIcon: IconButton(
+                    tooltip: _isPasswordVisible
+                        ? 'Hide password'
+                        : 'Show password',
+                    onPressed: () => setState(
+                      () => _isPasswordVisible = !_isPasswordVisible,
+                    ),
+                    icon: Icon(
+                      _isPasswordVisible
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      color: AppColors.textGrey,
+                    ),
+                  ),
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
@@ -176,10 +192,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
               // CONFIRM PASSWORD FIELD
               TextField(
                 controller: _confirmPasswordController, // Attached controller
-                obscureText: true,
+                obscureText: !_isConfirmPasswordVisible,
                 decoration: InputDecoration(
                   hintText: "Confirm Password",
                   prefixIcon: const Icon(Icons.key_outlined),
+                  suffixIcon: IconButton(
+                    tooltip: _isConfirmPasswordVisible
+                        ? 'Hide password'
+                        : 'Show password',
+                    onPressed: () => setState(
+                      () => _isConfirmPasswordVisible =
+                          !_isConfirmPasswordVisible,
+                    ),
+                    icon: Icon(
+                      _isConfirmPasswordVisible
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      color: AppColors.textGrey,
+                    ),
+                  ),
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(

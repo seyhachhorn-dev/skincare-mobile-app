@@ -20,6 +20,7 @@ class _LoginScreenState extends State<LoginScreen> {
   // (Make sure you initialize this the exact same way that fixed your earlier error)
   final AuthService _authService = AuthService.instance;
   bool _isLoading = false;
+  bool _isPasswordVisible = false;
 
   // 3. The function to handle the login button press
   Future<void> _handleLogin() async {
@@ -129,10 +130,24 @@ class _LoginScreenState extends State<LoginScreen> {
               // PASSWORD FIELD
               TextField(
                 controller: _passwordController, // Attached controller
-                obscureText: true, // hides the password
+                obscureText: !_isPasswordVisible,
                 decoration: InputDecoration(
                   hintText: AppString.password,
                   prefixIcon: const Icon(Icons.key_outlined),
+                  suffixIcon: IconButton(
+                    tooltip: _isPasswordVisible
+                        ? 'Hide password'
+                        : 'Show password',
+                    onPressed: () => setState(
+                      () => _isPasswordVisible = !_isPasswordVisible,
+                    ),
+                    icon: Icon(
+                      _isPasswordVisible
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      color: AppColors.textGrey,
+                    ),
+                  ),
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
@@ -171,7 +186,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.white,
+                          ),
+                        )
                       : const Text(
                           AppString.signIn,
                           style: TextStyle(

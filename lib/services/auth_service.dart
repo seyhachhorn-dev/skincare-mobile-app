@@ -9,6 +9,7 @@ import 'package:skincare_app/constant/app_colors.dart';
 import 'package:skincare_app/constant/app_string.dart';
 import 'package:skincare_app/model/auth_model.dart';
 import 'package:skincare_app/services/cart_service.dart';
+import 'package:skincare_app/services/category_preference_service.dart';
 import 'package:skincare_app/services/favorites_service.dart';
 
 /// Auth-related actions shared across screens (Profile tile, drawer, etc).
@@ -97,6 +98,7 @@ class AuthService {
     await _clearToken();
     CartService.instance.reset();
     FavoritesService.instance.reset();
+    await CategoryPreferenceService.clear();
 
     if (!context.mounted) return;
     Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
@@ -172,6 +174,13 @@ class AuthService {
       final success = response.statusCode == 200;
 
       final result = LoginResponse.fromJson(decodedData, status: success);
+
+      if (!success && response.statusCode == 422) {
+        return LoginResponse(
+          status: false,
+          message: 'Invalid email or password.',
+        );
+      }
 
       if (success && result.token != null) {
         await _saveToken(result.token!);

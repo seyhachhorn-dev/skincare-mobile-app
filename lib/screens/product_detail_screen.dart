@@ -22,6 +22,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   final PageController _imageController = PageController();
   int _imageIndex = 0;
   int _quantity = 1;
+  String? _selectedSize;
   bool _detailsExpanded = false;
   bool _shippingExpanded = false;
 
@@ -195,10 +196,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         ),
         const SizedBox(height: 18),
         Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (product.size.isNotEmpty)
-              _buildLabeledValue(AppString.size, product.size),
-            const SizedBox(width: 40),
+              Expanded(child: _buildSizeOptions(product.size)),
+            if (product.size.isNotEmpty) const SizedBox(width: 24),
             _buildQuantityStepper(),
           ],
         ),
@@ -222,12 +224,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
-  Widget _buildLabeledValue(String label, String value) {
+  Widget _buildSizeOptions(String value) {
+    final sizes = value
+        .split(',')
+        .map((size) => size.trim())
+        .where((size) => size.isNotEmpty)
+        .toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label.toUpperCase(),
+          AppString.size.toUpperCase(),
           style: const TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w600,
@@ -235,14 +243,53 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ),
         ),
         const SizedBox(height: 6),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textDark,
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: sizes
+              .map(
+                (size) {
+                  final isSelected = _selectedSize == size;
+                  return Semantics(
+                    button: true,
+                    selected: isSelected,
+                    label: 'Size $size',
+                    child: InkWell(
+                      onTap: () => setState(() => _selectedSize = size),
+                      borderRadius: BorderRadius.circular(8),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: isSelected
+                                ? AppColors.primary
+                                : AppColors.border,
+                            width: isSelected ? 2 : 1,
+                          ),
+                        ),
+                        child: Text(
+                          size,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: isSelected
+                                ? AppColors.primary
+                                : AppColors.textDark,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              )
+              .toList(),
           ),
-        ),
       ],
     );
   }
@@ -397,7 +444,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryLight,
+                backgroundColor: AppColors.primary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(26),
                 ),

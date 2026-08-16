@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:skincare_app/components/skipbutton.dart';
 import 'package:skincare_app/constant/app_colors.dart';
 import 'package:skincare_app/constant/app_string.dart';
+import 'package:skincare_app/model/category.dart';
+import 'package:skincare_app/services/category_preference_service.dart';
+import 'package:skincare_app/services/category_service.dart';
 
 class FavoriteCategory extends StatefulWidget {
   const FavoriteCategory({super.key});
@@ -10,32 +13,44 @@ class FavoriteCategory extends StatefulWidget {
   State<FavoriteCategory> createState() => _FavoriteCategoryState();
 }
 
-class _CategoryOption {
-  final IconData icon;
-  final String name;
-  const _CategoryOption(this.icon, this.name);
-}
-
 class _FavoriteCategoryState extends State<FavoriteCategory> {
-  // Material Icons instead of raw emoji — emoji glyphs depend on the
-  // device's OS/OEM font, and several here (🧴 lotion bottle, 🪮 hair pick)
-  // are recent enough Unicode additions that many Android devices render
-  // them as blank "tofu" boxes. Icons are bundled with Flutter itself, so
-  // they render identically on every device.
-  final List<_CategoryOption> categories = const [
-    _CategoryOption(Icons.apps_rounded, "Show All"),
-    _CategoryOption(Icons.local_florist_outlined, "Perfume"),
-    _CategoryOption(Icons.spa_outlined, "Moisturizer"),
-    _CategoryOption(Icons.shower_outlined, "Shampoo"),
-    _CategoryOption(Icons.card_giftcard_outlined, "Gift Cards"),
-    _CategoryOption(Icons.water_drop_outlined, "Toner"),
-    _CategoryOption(Icons.opacity_outlined, "Face oils"),
-    _CategoryOption(Icons.brush_outlined, "Foundation"),
-    _CategoryOption(Icons.wb_sunny_outlined, "Suncare"),
-    _CategoryOption(Icons.build_outlined, "Tools"),
-  ];
+  List<Category> _categories = [];
+  Set<String> _selectedCategoryIds = {};
+  bool _isLoading = true;
+  bool _isSaving = false;
 
-  final Set<String> selected = {};
+  @override
+  void initState() {
+    super.initState();
+    _loadCategories();
+  }
+
+  Future<void> _loadCategories() async {
+    final results = await Future.wait([
+      CategoryService.instance.list(),
+      CategoryPreferenceService.loadCategoryIds(),
+    ]);
+    if (!mounted) return;
+
+    final response = results[0] as CategoryListResponse;
+    final savedCategoryIds = results[1] as Set<int>;
+    setState(() {
+      _categories = response.status ? response.categories : [];
+      _selectedCategoryIds = _categories
+          .where((category) => savedCategoryIds.contains(int.tryParse(category.id)))
+          .map((category) => category.id)
+          .toSet();
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _saveAndContinue(Iterable<String> categoryIds) async {
+    setState(() => _isSaving = true);
+    await CategoryPreferenceService.saveCategoryIds(categoryIds);
+    if (!mounted) return;
+
+    Navigator.pushReplacementNamed(context, '/home');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,107 +74,125 @@ class _FavoriteCategoryState extends State<FavoriteCategory> {
                 ),
               ),
               const SizedBox(height: 12),
-
               const Text(
                 AppString.chooseSub,
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 15, color: AppColors.textGrey),
               ),
               const SizedBox(height: 32),
-
-              // CATEGORY CHIPS (2 per row)
-              Wrap(
-                spacing: 16, // for horizental
-                runSpacing: 16, //for vertical gap
-                alignment: WrapAlignment.center,
-                children: categories.map((category) {
-                  final name = category.name;
-                  final icon = category.icon;
-                  final isSelected = selected.contains(name);
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        if (isSelected) {
-                          selected.remove(name);
-                        } else {
-                          selected.add(name);
-                        }
-                      });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 14,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isSelected ? AppColors.accent : Colors.white,
-                        borderRadius: BorderRadius.circular(30),
-                        border: Border.all(
-                          color: isSelected
-                              ? AppColors.accent
-                              : Colors.grey.shade300,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            icon,
-                            size: 20,
-                            color: isSelected ? Colors.white : AppColors.textDark,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            name,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: isSelected
-                                  ? Colors.white
-                                  : AppColors.textDark,
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-
-              const Spacer(),
-
+              Expanded(child: _buildCategoryChoices()),
               SizedBox(
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/home');
-                  },
+                  onPressed: _isSaving || _isLoading
+                      ? null
+                      : () => _saveAndContinue(_selectedCategoryIds),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.accent,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(28),
                     ),
                   ),
-                  child: const Text(
-                    AppString.continueBtn,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                    ),
-                  ),
+                  child: _isSaving
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text(
+                          AppString.continueBtn,
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        ),
                 ),
               ),
               const SizedBox(height: 16),
-
               SkipButton(
                 onTap: () {
-                  Navigator.pushNamed(context, '/home');
+                  if (!_isSaving && !_isLoading) {
+                    _saveAndContinue(const <String>{});
+                  }
                 },
               ),
-
               const SizedBox(height: 20),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryChoices() {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.accent),
+      );
+    }
+    if (_categories.isEmpty) {
+      return const Center(
+        child: Text(
+          'Categories could not be loaded. You can continue without preferences.',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: AppColors.textGrey),
+        ),
+      );
+    }
+
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 20),
+        child: Wrap(
+          spacing: 16,
+          runSpacing: 16,
+          alignment: WrapAlignment.center,
+          children: _categories.map((category) {
+            final isSelected = _selectedCategoryIds.contains(category.id);
+            return GestureDetector(
+              onTap: () {
+                setState(() {
+                  if (isSelected) {
+                    _selectedCategoryIds.remove(category.id);
+                  } else {
+                    _selectedCategoryIds.add(category.id);
+                  }
+                });
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 14,
+                ),
+                decoration: BoxDecoration(
+                  color: isSelected ? AppColors.accent : Colors.white,
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(
+                    color: isSelected ? AppColors.accent : Colors.grey.shade300,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      category.icon,
+                      size: 20,
+                      color: isSelected ? Colors.white : AppColors.textDark,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      category.name,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: isSelected ? Colors.white : AppColors.textDark,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
         ),
       ),
     );

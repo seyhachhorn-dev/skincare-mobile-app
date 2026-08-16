@@ -5,6 +5,7 @@ import 'package:skincare_app/constant/app_string.dart';
 import 'package:skincare_app/model/product.dart';
 import 'package:skincare_app/screens/product_detail_screen.dart';
 import 'package:skincare_app/services/cart_service.dart';
+import 'package:skincare_app/services/category_preference_service.dart';
 import 'package:skincare_app/services/favorites_service.dart';
 import 'package:skincare_app/services/product_service.dart';
 import 'package:skincare_app/utils/money.dart';
@@ -23,13 +24,16 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  int selectedCategory = 0; // which filter chip is active
+  int selectedFilter = 0;
   int currentTab = 0; // which bottom nav item is active
 
-  final List<String> filters = ["Trending", "New Products", "Highly Rated"];
+  final List<String> filters = ["Trending", "New Products"];
+
+  String get _selectedSort => selectedFilter == 0 ? 'trending' : 'new';
 
   List<Product> products = [];
   bool _isLoading = true;
+  bool _hasPreferredProducts = false;
 
   @override
   void initState() {
@@ -42,15 +46,28 @@ class _HomeScreenState extends State<HomeScreen> {
     // every screen, so they're loaded here too — this is the one screen
     // guaranteed to run early in every session (post-login/onboarding).
     final results = await Future.wait([
-      ProductService.instance.list(),
+      ProductService.instance.list(sort: _selectedSort),
       CartService.instance.load(),
       FavoritesService.instance.load(),
+      CategoryPreferenceService.loadCategoryIds(),
     ]);
     if (!mounted) return;
 
     final productResponse = results[0] as ProductListResponse;
+    final preferredCategoryIds = results[3] as Set<int>;
+    final orderedProducts = productResponse.status
+        ? CategoryPreferenceService.prioritize(
+            productResponse.products,
+            preferredCategoryIds,
+          )
+        : <Product>[];
     setState(() {
-      if (productResponse.status) products = productResponse.products;
+      products = orderedProducts;
+      _hasPreferredProducts = orderedProducts.any(
+        (product) =>
+            product.categoryId != null &&
+            preferredCategoryIds.contains(product.categoryId),
+      );
       _isLoading = false;
     });
 
@@ -78,7 +95,9 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               _buildHeader(),
               _buildSearchBar(),
-              _buildSectionTitle(AppString.browseCategory),
+              _buildSectionTitle(
+                _hasPreferredProducts ? 'Picked for you' : AppString.browseCategory,
+              ),
               _buildFilterChips(),
               _buildProductList(),
               _buildSectionTitle(AppString.productCollections),
@@ -184,7 +203,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ---------- FILTER CHIPS (Trending / New / Rated) ----------
+  // ---------- FILTER CHIPS ----------
   Widget _buildFilterChips() {
     return SizedBox(
       height: 44,
@@ -193,9 +212,13 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 24),
         itemCount: filters.length,
         itemBuilder: (context, index) {
-          final isActive = selectedCategory == index;
+          final isActive = selectedFilter == index;
           return GestureDetector(
-            onTap: () => setState(() => selectedCategory = index),
+            onTap: () {
+              if (selectedFilter == index) return;
+              setState(() => selectedFilter = index);
+              _loadHome();
+            },
             child: Container(
               margin: const EdgeInsets.only(right: 12),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -261,7 +284,7 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
     return SizedBox(
-      height: 340,
+      height: 400,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
@@ -299,16 +322,16 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // image + heart
-            Stack(
-              children: [
+            Expanded(
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
                 ClipRRect(
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(16),
                   ),
                   child: Image(
                     image: product.imageProvider,
-                    height: 180,
-                    width: double.infinity,
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -336,7 +359,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-              ],
+                ],
+              ),
             ),
             // text
             Padding(
@@ -346,6 +370,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Text(
                     product.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,

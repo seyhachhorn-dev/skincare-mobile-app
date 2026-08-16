@@ -13,10 +13,15 @@ class ProductService {
 
   static const Map<String, String> _headers = {'Accept': 'application/json'};
 
-  Future<ProductListResponse> list({String? search, int? categoryId}) async {
+  Future<ProductListResponse> list({
+    String? search,
+    int? categoryId,
+    String? sort,
+  }) async {
     final query = <String, String>{
       if (search != null && search.isNotEmpty) 'search': search,
       if (categoryId != null) 'category_id': '$categoryId',
+      if (sort != null && sort.isNotEmpty) 'sort': sort,
     };
     final url = Uri.parse(baseUrl).replace(queryParameters: query.isEmpty ? null : query);
 
