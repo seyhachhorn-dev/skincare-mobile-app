@@ -68,6 +68,7 @@ static const String productCollections = "Product collections";
   // Bakong KHQR payment
   static const String bakongKhqr = "Bakong KHQR";
   static const String khqrTitle = "Scan to Pay";
+  static const String khqrTagline = "Scan. Pay. Done.";
   static const String khqrInstruction = "Open your banking app and scan this code with Bakong KHQR to complete payment.";
   static const String khqrWaiting = "Waiting for payment...";
   static const String khqrAmountDue = "Amount due";

@@ -44,6 +44,32 @@ class PaymentService {
     }
   }
 
+  /// Abandons a still-unpaid KHQR order. The server releases its items
+  /// back into the user's cart and reverses the points it speculatively
+  /// credited at order-placement time — callers should resync the local
+  /// cart (CartService.load()) after this succeeds.
+  Future<KhqrCancelResponse> cancelKhqr(int orderId) async {
+    final headers = await _authHeaders();
+    if (headers == null) {
+      return KhqrCancelResponse(status: false, message: 'Not logged in.');
+    }
+
+    try {
+      final response = await http
+          .post(Uri.parse('${ApiConstants.baseUrl}/orders/$orderId/khqr/cancel'), headers: headers)
+          .timeout(ApiConstants.requestTimeout);
+
+      final decodedData = jsonDecode(response.body);
+      final success = response.statusCode == 200;
+
+      return KhqrCancelResponse.fromJson(decodedData, status: success);
+    } on TimeoutException {
+      return KhqrCancelResponse(status: false, message: 'The server took too long to respond.');
+    } catch (e) {
+      return KhqrCancelResponse(status: false, message: 'Connection failed. Please check your network.');
+    }
+  }
+
   /// Meant to be polled while the KHQR code is on screen.
   Future<KhqrStatusResponse> checkKhqrStatus(int orderId) async {
     final headers = await _authHeaders();

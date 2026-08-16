@@ -6,7 +6,9 @@ import 'package:skincare_app/constant/app_colors.dart';
 import 'package:skincare_app/constant/app_string.dart';
 import 'package:skincare_app/model/order.dart';
 import 'package:skincare_app/screens/thank_you_screen.dart';
+import 'package:skincare_app/services/cart_service.dart';
 import 'package:skincare_app/services/payment_service.dart';
+import 'package:skincare_app/widgets/app_snackbar.dart';
 
 /// Shown right after placing an order with payment_method=bakong_khqr.
 /// Renders the KHQR code returned by the backend and polls order payment
@@ -23,8 +25,10 @@ class _KhqrPaymentScreenState extends State<KhqrPaymentScreen> {
   static const _pollInterval = Duration(seconds: 4);
 
   String? _qr;
+  String? _merchantName;
   bool _isLoading = true;
   bool _isPaid = false;
+  bool _isCancelling = false;
   String? _error;
   Timer? _pollTimer;
 
@@ -59,6 +63,7 @@ class _KhqrPaymentScreenState extends State<KhqrPaymentScreen> {
 
     setState(() {
       _qr = response.payment!.qr;
+      _merchantName = response.payment!.merchantName;
       _isLoading = false;
     });
     _startPolling();
@@ -87,8 +92,34 @@ class _KhqrPaymentScreenState extends State<KhqrPaymentScreen> {
     }
   }
 
-  void _cancel() {
+  /// Backing out of a pending KHQR order without telling the server would
+  /// leave the order (and the cart items it took) stranded — the cart was
+  /// already emptied server-side the moment the order was placed. This
+  /// asks the server to cancel it, which hands the items back to the
+  /// cart, before actually leaving the screen.
+  Future<void> _cancel() async {
+    if (_isPaid || _isCancelling) return;
+
+    setState(() => _isCancelling = true);
     _pollTimer?.cancel();
+
+    final response = await PaymentService.instance.cancelKhqr(widget.order.id);
+    if (!mounted) return;
+
+    if (!response.status) {
+      setState(() => _isCancelling = false);
+      if (_qr != null) _startPolling();
+      AppSnackBar.error(
+        context,
+        title: "Couldn't cancel",
+        message: response.message.isNotEmpty ? response.message : 'Please try again.',
+      );
+      return;
+    }
+
+    await CartService.instance.load();
+    if (!mounted) return;
+
     if (Navigator.canPop(context)) Navigator.pop(context);
   }
 
@@ -124,7 +155,7 @@ class _KhqrPaymentScreenState extends State<KhqrPaymentScreen> {
         children: [
           IconButton(
             icon: const Icon(Icons.arrow_back, color: AppColors.textDark),
-            onPressed: _cancel,
+            onPressed: _isCancelling ? null : _cancel,
           ),
           const Expanded(
             child: Text(
@@ -178,18 +209,7 @@ class _KhqrPaymentScreenState extends State<KhqrPaymentScreen> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.border),
-            boxShadow: [
-              BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 16, offset: const Offset(0, 6)),
-            ],
-          ),
-          child: QrImageView(data: _qr!, size: 220, backgroundColor: Colors.white),
-        ),
+        _buildKhqrCard(),
         const SizedBox(height: 20),
         Text(
           AppString.khqrAmountDue,
@@ -224,10 +244,147 @@ class _KhqrPaymentScreenState extends State<KhqrPaymentScreen> {
         ),
         const SizedBox(height: 24),
         TextButton(
-          onPressed: _cancel,
-          child: const Text(AppString.khqrCancel, style: TextStyle(color: AppColors.textGrey)),
+          onPressed: _isCancelling ? null : _cancel,
+          child: _isCancelling
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.textGrey),
+                )
+              : const Text(AppString.khqrCancel, style: TextStyle(color: AppColors.textGrey)),
         ),
       ],
     );
   }
+
+  // ---------- KHQR MERCHANT CARD ----------
+  Widget _buildKhqrCard() {
+    const qrSize = 200.0;
+    const frameSize = 248.0;
+
+    return Container(
+      width: 300,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 20, offset: const Offset(0, 8)),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Image.asset('assets/icons/KHQR_Logo.svg.webp', height: 30, fit: BoxFit.contain),
+          const SizedBox(height: 10),
+          const Text(
+            AppString.khqrTagline,
+            style: TextStyle(fontSize: 13, color: AppColors.textGrey),
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: frameSize,
+            height: frameSize,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                CustomPaint(
+                  size: const Size(frameSize, frameSize),
+                  painter: const _QrCornersPainter(color: AppColors.border),
+                ),
+                QrImageView(
+                  data: _qr!,
+                  size: qrSize,
+                  backgroundColor: Colors.white,
+                  errorCorrectionLevel: QrErrorCorrectLevel.H,
+                  embeddedImage: const AssetImage('assets/icons/khqricon.png'),
+                  embeddedImageStyle: const QrEmbeddedImageStyle(size: Size(26, 26)),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            (_merchantName == null || _merchantName!.isEmpty) ? '' : _merchantName!.toUpperCase(),
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.textDark),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            "Order ID: ${widget.order.orderNumber}",
+            style: const TextStyle(fontSize: 12, color: AppColors.textGrey),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Rounded corner-bracket "viewfinder" frame drawn around the QR, matching
+/// the KHQR reference card design (open brackets, not a full border).
+class _QrCornersPainter extends CustomPainter {
+  final Color color;
+  final double cornerLength;
+  final double thickness;
+  final double radius;
+
+  const _QrCornersPainter({
+    required this.color,
+    this.cornerLength = 26,
+    this.thickness = 3,
+    this.radius = 10,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = thickness
+      ..strokeCap = StrokeCap.round;
+
+    canvas.drawPath(
+      Path()
+        ..moveTo(0, cornerLength)
+        ..lineTo(0, radius)
+        ..arcToPoint(Offset(radius, 0), radius: Radius.circular(radius))
+        ..lineTo(cornerLength, 0),
+      paint,
+    );
+
+    canvas.drawPath(
+      Path()
+        ..moveTo(size.width - cornerLength, 0)
+        ..lineTo(size.width - radius, 0)
+        ..arcToPoint(Offset(size.width, radius), radius: Radius.circular(radius))
+        ..lineTo(size.width, cornerLength),
+      paint,
+    );
+
+    canvas.drawPath(
+      Path()
+        ..moveTo(size.width, size.height - cornerLength)
+        ..lineTo(size.width, size.height - radius)
+        ..arcToPoint(Offset(size.width - radius, size.height), radius: Radius.circular(radius))
+        ..lineTo(size.width - cornerLength, size.height),
+      paint,
+    );
+
+    canvas.drawPath(
+      Path()
+        ..moveTo(cornerLength, size.height)
+        ..lineTo(radius, size.height)
+        ..arcToPoint(Offset(0, size.height - radius), radius: Radius.circular(radius))
+        ..lineTo(0, size.height - cornerLength),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _QrCornersPainter oldDelegate) =>
+      oldDelegate.color != color ||
+      oldDelegate.cornerLength != cornerLength ||
+      oldDelegate.thickness != thickness ||
+      oldDelegate.radius != radius;
 }

@@ -1,6 +1,6 @@
 class ApiConstants {
   ApiConstants._();
-  static const String baseUrl = String.fromEnvironment('BACKEND_API_URL', defaultValue: 'http://192.168.100.15:8000/api');
+  static const String baseUrl = String.fromEnvironment('BACKEND_API_URL', defaultValue: 'http://10.1.61.135:8000/api');
 
   /// SharedPreferences key the Sanctum bearer token is stored under.
   static const String tokenKey = 'auth_token';
