@@ -7,6 +7,7 @@ import 'package:skincare_app/screens/product_detail_screen.dart';
 import 'package:skincare_app/services/cart_service.dart';
 import 'package:skincare_app/services/favorites_service.dart';
 import 'package:skincare_app/services/product_service.dart';
+import 'package:skincare_app/utils/money.dart';
 import 'package:skincare_app/widgets/app_bottom_nav.dart';
 import 'package:skincare_app/widgets/app_drawer.dart';
 import 'package:skincare_app/widgets/app_snackbar.dart';
@@ -23,7 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   int selectedCategory = 0; // which filter chip is active
-  int currentTab = 0;       // which bottom nav item is active
+  int currentTab = 0; // which bottom nav item is active
 
   final List<String> filters = ["Trending", "New Products", "Highly Rated"];
 
@@ -57,7 +58,9 @@ class _HomeScreenState extends State<HomeScreen> {
       AppSnackBar.error(
         context,
         title: 'Could not load products',
-        message: productResponse.message.isNotEmpty ? productResponse.message : 'Please try again.',
+        message: productResponse.message.isNotEmpty
+            ? productResponse.message
+            : 'Please try again.',
       );
     }
   }
@@ -73,7 +76,6 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-
               _buildHeader(),
               _buildSearchBar(),
               _buildSectionTitle(AppString.browseCategory),
@@ -82,7 +84,6 @@ class _HomeScreenState extends State<HomeScreen> {
               _buildSectionTitle(AppString.productCollections),
               _buildCollectionRow(),
               const SizedBox(height: 20),
-
             ],
           ),
         ),
@@ -139,7 +140,11 @@ class _HomeScreenState extends State<HomeScreen> {
           hintText: AppString.searchHint,
           prefixIcon: Padding(
             padding: const EdgeInsets.all(12),
-            child: SvgIcon(AppIcons.search, color: AppColors.textGrey, size: 20),
+            child: SvgIcon(
+              AppIcons.search,
+              color: AppColors.textGrey,
+              size: 20,
+            ),
           ),
           filled: true,
           fillColor: Colors.grey.shade100,
@@ -239,14 +244,19 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_isLoading) {
       return const SizedBox(
         height: 340,
-        child: Center(child: CircularProgressIndicator(color: AppColors.accent)),
+        child: Center(
+          child: CircularProgressIndicator(color: AppColors.accent),
+        ),
       );
     }
     if (products.isEmpty) {
       return const SizedBox(
         height: 120,
         child: Center(
-          child: Text('No products yet', style: TextStyle(color: AppColors.textGrey)),
+          child: Text(
+            'No products yet',
+            style: TextStyle(color: AppColors.textGrey),
+          ),
         ),
       );
     }
@@ -267,7 +277,9 @@ class _HomeScreenState extends State<HomeScreen> {
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => ProductDetailScreen(product: product)),
+        MaterialPageRoute(
+          builder: (context) => ProductDetailScreen(product: product),
+        ),
       ),
       child: Container(
         width: 260,
@@ -355,7 +367,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "${product.price}",
+                        Money.usd(product.price),
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
@@ -370,7 +382,11 @@ class _HomeScreenState extends State<HomeScreen> {
                             color: AppColors.accent,
                             shape: BoxShape.circle,
                           ),
-                          child: SvgIcon(AppIcons.bag, color: Colors.white, size: 20),
+                          child: SvgIcon(
+                            AppIcons.bag,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                         ),
                       ),
                     ],
@@ -433,5 +449,4 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
 }

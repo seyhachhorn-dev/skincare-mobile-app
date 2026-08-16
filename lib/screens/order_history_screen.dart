@@ -3,6 +3,7 @@ import 'package:skincare_app/constant/app_colors.dart';
 import 'package:skincare_app/constant/app_string.dart';
 import 'package:skincare_app/model/order.dart';
 import 'package:skincare_app/services/order_service.dart';
+import 'package:skincare_app/utils/money.dart';
 import 'package:skincare_app/widgets/app_snackbar.dart';
 
 class OrderHistoryScreen extends StatefulWidget {
@@ -35,7 +36,9 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
       AppSnackBar.error(
         context,
         title: 'Could not load orders',
-        message: response.message.isNotEmpty ? response.message : 'Please try again.',
+        message: response.message.isNotEmpty
+            ? response.message
+            : 'Please try again.',
       );
     }
   }
@@ -50,15 +53,19 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
             _buildHeader(context),
             Expanded(
               child: _isLoading
-                  ? const Center(child: CircularProgressIndicator(color: AppColors.accent))
+                  ? const Center(
+                      child: CircularProgressIndicator(color: AppColors.accent),
+                    )
                   : _orders.isEmpty
-                      ? _buildEmptyState()
-                      : ListView.separated(
-                          padding: const EdgeInsets.all(20),
-                          itemCount: _orders.length,
-                          separatorBuilder: (context, index) => const SizedBox(height: 12),
-                          itemBuilder: (context, index) => _buildOrderCard(_orders[index]),
-                        ),
+                  ? _buildEmptyState()
+                  : ListView.separated(
+                      padding: const EdgeInsets.all(20),
+                      itemCount: _orders.length,
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 12),
+                      itemBuilder: (context, index) =>
+                          _buildOrderCard(_orders[index]),
+                    ),
             ),
           ],
         ),
@@ -81,7 +88,11 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
             child: Text(
               AppString.orderHistory,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textDark),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textDark,
+              ),
             ),
           ),
           const SizedBox(width: 48),
@@ -97,11 +108,19 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.receipt_long_outlined, size: 56, color: Colors.grey.shade300),
+            Icon(
+              Icons.receipt_long_outlined,
+              size: 56,
+              color: Colors.grey.shade300,
+            ),
             const SizedBox(height: 16),
             const Text(
               AppString.orderHistoryEmpty,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textDark,
+              ),
             ),
             const SizedBox(height: 6),
             const Text(
@@ -123,7 +142,11 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 12, offset: const Offset(0, 4)),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Column(
@@ -134,12 +157,21 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
             children: [
               Text(
                 "#${order.orderNumber}",
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textDark),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textDark,
+                ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
-                  color: (isDelivered ? AppColors.success : AppColors.primaryLight).withValues(alpha: 0.12),
+                  color:
+                      (isDelivered ? AppColors.success : AppColors.primaryLight)
+                          .withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -154,7 +186,10 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
             ],
           ),
           const SizedBox(height: 6),
-          Text(order.formattedDate, style: const TextStyle(fontSize: 12, color: AppColors.textGrey)),
+          Text(
+            order.formattedDate,
+            style: const TextStyle(fontSize: 12, color: AppColors.textGrey),
+          ),
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -164,8 +199,12 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                 style: const TextStyle(fontSize: 13, color: AppColors.textGrey),
               ),
               Text(
-                "\$${order.total}.00 USD",
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textDark),
+                Money.usd(order.total),
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textDark,
+                ),
               ),
             ],
           ),

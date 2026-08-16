@@ -11,6 +11,7 @@ import 'package:skincare_app/services/cart_service.dart';
 import 'package:skincare_app/services/category_service.dart';
 import 'package:skincare_app/services/favorites_service.dart';
 import 'package:skincare_app/services/product_service.dart';
+import 'package:skincare_app/utils/money.dart';
 import 'package:skincare_app/widgets/app_bottom_nav.dart';
 import 'package:skincare_app/widgets/app_drawer.dart';
 import 'package:skincare_app/widgets/app_snackbar.dart';
@@ -60,7 +61,12 @@ class _ExploreScreenState extends State<ExploreScreen> {
     final categoryResponse = await CategoryService.instance.list();
     if (!mounted) return;
     if (categoryResponse.status) {
-      setState(() => categories = [Category(id: '', name: 'All'), ...categoryResponse.categories]);
+      setState(
+        () => categories = [
+          Category(id: '', name: 'All'),
+          ...categoryResponse.categories,
+        ],
+      );
     }
     await _loadProducts();
   }
@@ -71,7 +77,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
   Future<void> _loadProducts() async {
     setState(() => _isLoading = true);
 
-    final categoryId = selectedCategory == 0 ? null : int.tryParse(categories[selectedCategory].id);
+    final categoryId = selectedCategory == 0
+        ? null
+        : int.tryParse(categories[selectedCategory].id);
     final search = _searchController.text.trim();
     final response = await ProductService.instance.list(
       search: search.isEmpty ? null : search,
@@ -88,7 +96,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
       AppSnackBar.error(
         context,
         title: 'Could not load products',
-        message: response.message.isNotEmpty ? response.message : 'Please try again.',
+        message: response.message.isNotEmpty
+            ? response.message
+            : 'Please try again.',
       );
     }
   }
@@ -172,7 +182,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
           hintText: AppString.exploreSearchHint,
           prefixIcon: Padding(
             padding: const EdgeInsets.all(12),
-            child: SvgIcon(AppIcons.search, color: AppColors.textGrey, size: 20),
+            child: SvgIcon(
+              AppIcons.search,
+              color: AppColors.textGrey,
+              size: 20,
+            ),
           ),
           filled: true,
           fillColor: Colors.grey.shade100,
@@ -303,7 +317,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
       return const SliverToBoxAdapter(
         child: Padding(
           padding: EdgeInsets.symmetric(vertical: 60),
-          child: Center(child: CircularProgressIndicator(color: AppColors.accent)),
+          child: Center(
+            child: CircularProgressIndicator(color: AppColors.accent),
+          ),
         ),
       );
     }
@@ -312,7 +328,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
         child: Padding(
           padding: EdgeInsets.symmetric(vertical: 40),
           child: Center(
-            child: Text('No products found', style: TextStyle(color: AppColors.textGrey)),
+            child: Text(
+              'No products found',
+              style: TextStyle(color: AppColors.textGrey),
+            ),
           ),
         ),
       );
@@ -335,7 +354,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => ProductDetailScreen(product: product)),
+        MaterialPageRoute(
+          builder: (context) => ProductDetailScreen(product: product),
+        ),
       ),
       child: Container(
         decoration: BoxDecoration(
@@ -357,8 +378,13 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 fit: StackFit.expand,
                 children: [
                   ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                    child: Image(image: product.imageProvider, fit: BoxFit.cover),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(16),
+                    ),
+                    child: Image(
+                      image: product.imageProvider,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                   Positioned(
                     top: 8,
@@ -407,7 +433,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "₹${product.price}",
+                        Money.usd(product.price),
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
@@ -422,7 +448,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
                             color: AppColors.accent,
                             shape: BoxShape.circle,
                           ),
-                          child: SvgIcon(AppIcons.bag, color: Colors.white, size: 14),
+                          child: SvgIcon(
+                            AppIcons.bag,
+                            color: Colors.white,
+                            size: 14,
+                          ),
                         ),
                       ),
                     ],
@@ -435,5 +465,4 @@ class _ExploreScreenState extends State<ExploreScreen> {
       ),
     );
   }
-
 }

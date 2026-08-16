@@ -6,6 +6,7 @@ import 'package:skincare_app/model/product.dart';
 import 'package:skincare_app/screens/product_detail_screen.dart';
 import 'package:skincare_app/services/cart_service.dart';
 import 'package:skincare_app/services/favorites_service.dart';
+import 'package:skincare_app/utils/money.dart';
 import 'package:skincare_app/widgets/app_bottom_nav.dart';
 import 'package:skincare_app/widgets/app_snackbar.dart';
 import 'package:skincare_app/widgets/svg_icon.dart';
@@ -45,14 +46,16 @@ class _SavedScreenState extends State<SavedScreen> {
                   if (items.isEmpty) return _buildEmptyState();
                   return GridView.builder(
                     padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 16,
-                      crossAxisSpacing: 16,
-                      childAspectRatio: 0.68,
-                    ),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          childAspectRatio: 0.68,
+                        ),
                     itemCount: items.length,
-                    itemBuilder: (context, index) => _buildProductCard(items[index]),
+                    itemBuilder: (context, index) =>
+                        _buildProductCard(items[index]),
                   );
                 },
               ),
@@ -94,7 +97,11 @@ class _SavedScreenState extends State<SavedScreen> {
             child: Text(
               AppString.savedTitle,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textDark),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textDark,
+              ),
             ),
           ),
           const SizedBox(width: 48),
@@ -115,7 +122,11 @@ class _SavedScreenState extends State<SavedScreen> {
             const SizedBox(height: 16),
             const Text(
               AppString.emptySaved,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textDark,
+              ),
             ),
             const SizedBox(height: 6),
             const Text(
@@ -153,7 +164,9 @@ class _SavedScreenState extends State<SavedScreen> {
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => ProductDetailScreen(product: product)),
+        MaterialPageRoute(
+          builder: (context) => ProductDetailScreen(product: product),
+        ),
       ),
       child: Container(
         decoration: BoxDecoration(
@@ -175,8 +188,13 @@ class _SavedScreenState extends State<SavedScreen> {
                 fit: StackFit.expand,
                 children: [
                   ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                    child: Image(image: product.imageProvider, fit: BoxFit.cover),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(16),
+                    ),
+                    child: Image(
+                      image: product.imageProvider,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                   Positioned(
                     top: 8,
@@ -189,7 +207,11 @@ class _SavedScreenState extends State<SavedScreen> {
                           color: Colors.white,
                           shape: BoxShape.circle,
                         ),
-                        child: SvgIcon(AppIcons.heart, color: AppColors.accent, size: 14),
+                        child: SvgIcon(
+                          AppIcons.heart,
+                          color: AppColors.accent,
+                          size: 14,
+                        ),
                       ),
                     ),
                   ),
@@ -216,7 +238,7 @@ class _SavedScreenState extends State<SavedScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "\$${product.price}",
+                        Money.usd(product.price),
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
@@ -231,7 +253,11 @@ class _SavedScreenState extends State<SavedScreen> {
                             color: AppColors.accent,
                             shape: BoxShape.circle,
                           ),
-                          child: SvgIcon(AppIcons.bag, color: Colors.white, size: 14),
+                          child: SvgIcon(
+                            AppIcons.bag,
+                            color: Colors.white,
+                            size: 14,
+                          ),
                         ),
                       ),
                     ],

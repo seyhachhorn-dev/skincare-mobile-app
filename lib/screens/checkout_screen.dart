@@ -4,10 +4,12 @@ import 'package:skincare_app/constant/app_string.dart';
 import 'package:skincare_app/model/address_model.dart';
 import 'package:skincare_app/screens/address_screen.dart';
 import 'package:skincare_app/screens/khqr_payment_screen.dart';
+import 'package:skincare_app/screens/payment_pending_screen.dart';
 import 'package:skincare_app/screens/thank_you_screen.dart';
 import 'package:skincare_app/services/address_service.dart';
 import 'package:skincare_app/services/cart_service.dart';
 import 'package:skincare_app/services/order_service.dart';
+import 'package:skincare_app/services/stripe_checkout_service.dart';
 import 'package:skincare_app/widgets/app_snackbar.dart';
 
 class CheckoutScreen extends StatefulWidget {
@@ -18,10 +20,10 @@ class CheckoutScreen extends StatefulWidget {
 }
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
-  static const List<String> _paymentMethods = ['apple_pay', 'paypal', 'bakong_khqr'];
+  static const List<String> _paymentMethods = ['card', 'bakong_khqr'];
   static const List<String> _shippingMethods = ['dhl', 'inpost'];
 
-  int _selectedPayment = 0; // 0 = Apple Pay, 1 = PayPal, 2 = Bakong KHQR
+  int _selectedPayment = 1; // 0 = Card (Stripe), 1 = Bakong KHQR
   int _selectedShipping = 1; // 0 = DHL, 1 = InPost
 
   Address? _address;
@@ -52,7 +54,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Future<void> _editAddress() async {
-    await Navigator.push(context, MaterialPageRoute(builder: (context) => const AddressScreen()));
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AddressScreen()),
+    );
     if (!mounted) return;
     setState(() => _isLoadingAddress = true);
     _loadAddress();
@@ -71,6 +76,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
 
     setState(() => _isPlacingOrder = true);
+
+    if (_paymentMethods[_selectedPayment] == 'card') {
+      await _payByCard();
+      return;
+    }
+
     final response = await OrderService.instance.placeOrder(
       addressId: _address!.id,
       paymentMethod: _paymentMethods[_selectedPayment],
@@ -83,7 +94,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       AppSnackBar.error(
         context,
         title: "Couldn't place order",
-        message: response.message.isNotEmpty ? response.message : 'Please try again.',
+        message: response.message.isNotEmpty
+            ? response.message
+            : 'Please try again.',
       );
       return;
     }
@@ -98,7 +111,42 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (context) => isBakongKhqr ? KhqrPaymentScreen(order: order) : ThankYouScreen(order: order),
+        builder: (context) => isBakongKhqr
+            ? KhqrPaymentScreen(order: order)
+            : ThankYouScreen(order: order),
+      ),
+    );
+  }
+
+  Future<void> _payByCard() async {
+    final response = await StripeCheckoutService.instance.pay(
+      addressId: _address!.id,
+      shippingMethod: _shippingMethods[_selectedShipping],
+    );
+    if (!mounted) return;
+
+    if (!response.status || response.checkout == null) {
+      setState(() => _isPlacingOrder = false);
+      await CartService.instance.load();
+      if (!mounted) return;
+      AppSnackBar.error(
+        context,
+        title: "Couldn't complete card payment",
+        message: response.message,
+      );
+      return;
+    }
+
+    CartService.instance.clear();
+    final checkout = response.checkout!;
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PaymentPendingScreen(
+          orderNumber: checkout.orderNumber,
+          amount: checkout.amount,
+          currency: checkout.currency,
+        ),
       ),
     );
   }
@@ -117,33 +165,38 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildSectionHeader(AppString.shippingInformation, AppString.edit, onAction: _editAddress),
+                    _buildSectionHeader(
+                      AppString.shippingInformation,
+                      AppString.edit,
+                      onAction: _editAddress,
+                    ),
                     const SizedBox(height: 10),
                     _buildAddressCard(),
                     const SizedBox(height: 24),
-                    _buildSectionHeader(AppString.paymentMethod, AppString.addACard),
+                    _buildSectionHeader(
+                      AppString.paymentMethod,
+                      AppString.addACard,
+                    ),
                     const SizedBox(height: 10),
                     _buildPaymentOption(
                       index: 0,
-                      icon: Icons.apple,
-                      label: "Apple Pay",
+                      icon: Icons.credit_card_outlined,
+                      label: AppString.addACard,
                     ),
                     const SizedBox(height: 10),
                     _buildPaymentOption(
                       index: 1,
-                      icon: Icons.account_balance_wallet_outlined,
-                      label: "PayPal",
-                    ),
-                    const SizedBox(height: 10),
-                    _buildPaymentOption(
-                      index: 2,
                       icon: Icons.qr_code_2,
                       label: AppString.bakongKhqr,
                     ),
                     const SizedBox(height: 24),
                     const Text(
                       AppString.shippingMethod,
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textDark),
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textDark,
+                      ),
                     ),
                     const SizedBox(height: 10),
                     _buildShippingOption(
@@ -160,7 +213,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     const SizedBox(height: 16),
                     const Text(
                       AppString.checkoutNote,
-                      style: TextStyle(fontSize: 12, color: AppColors.textGrey, height: 1.5),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textGrey,
+                        height: 1.5,
+                      ),
                     ),
                     const SizedBox(height: 20),
                   ],
@@ -190,7 +247,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             child: Text(
               AppString.checkoutTitle,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textDark),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textDark,
+              ),
             ),
           ),
           const SizedBox(width: 48),
@@ -199,14 +260,28 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  Widget _buildSectionHeader(String title, String action, {VoidCallback? onAction}) {
+  Widget _buildSectionHeader(
+    String title,
+    String action, {
+    VoidCallback? onAction,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textDark)),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textDark,
+          ),
+        ),
         GestureDetector(
           onTap: onAction,
-          child: Text(action, style: const TextStyle(fontSize: 13, color: AppColors.textGrey)),
+          child: Text(
+            action,
+            style: const TextStyle(fontSize: 13, color: AppColors.textGrey),
+          ),
         ),
       ],
     );
@@ -217,7 +292,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     if (_isLoadingAddress) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 12),
-        child: Center(child: CircularProgressIndicator(color: AppColors.accent)),
+        child: Center(
+          child: CircularProgressIndicator(color: AppColors.accent),
+        ),
       );
     }
 
@@ -239,7 +316,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               child: address == null
                   ? const Text(
                       "No address yet — tap to add one",
-                      style: TextStyle(fontSize: 13, color: AppColors.textGrey, height: 1.4),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textGrey,
+                        height: 1.4,
+                      ),
                     )
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -248,12 +329,20 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           address.type.isEmpty
                               ? "Address"
                               : "${address.type[0].toUpperCase()}${address.type.substring(1)}",
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textDark),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textDark,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           address.formatted,
-                          style: const TextStyle(fontSize: 13, color: AppColors.textGrey, height: 1.4),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textGrey,
+                            height: 1.4,
+                          ),
                         ),
                       ],
                     ),
@@ -266,7 +355,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   // ---------- PAYMENT OPTION ----------
-  Widget _buildPaymentOption({required int index, required IconData icon, required String label}) {
+  Widget _buildPaymentOption({
+    required int index,
+    required IconData icon,
+    required String label,
+  }) {
     final isSelected = _selectedPayment == index;
     return GestureDetector(
       onTap: () => setState(() => _selectedPayment = index),
@@ -274,19 +367,32 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: isSelected ? AppColors.accent : AppColors.border, width: isSelected ? 1.5 : 1),
+          border: Border.all(
+            color: isSelected ? AppColors.accent : AppColors.border,
+            width: isSelected ? 1.5 : 1,
+          ),
         ),
         child: Row(
           children: [
             Container(
               width: 36,
               height: 36,
-              decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(8)),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8),
+              ),
               child: Icon(icon, size: 20, color: AppColors.textDark),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textDark)),
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textDark,
+                ),
+              ),
             ),
             _buildRadio(isSelected),
           ],
@@ -296,7 +402,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   // ---------- SHIPPING OPTION ----------
-  Widget _buildShippingOption({required int index, required String carrier, required String estimate}) {
+  Widget _buildShippingOption({
+    required int index,
+    required String carrier,
+    required String estimate,
+  }) {
     final isSelected = _selectedShipping == index;
     return GestureDetector(
       onTap: () => setState(() => _selectedShipping = index),
@@ -309,9 +419,22 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(carrier, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textDark)),
+                Text(
+                  carrier,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textDark,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(estimate, style: const TextStyle(fontSize: 12, color: AppColors.textGrey)),
+                Text(
+                  estimate,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textGrey,
+                  ),
+                ),
               ],
             ),
           ),
@@ -326,14 +449,20 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       height: 20,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: isSelected ? AppColors.accent : AppColors.border, width: 2),
+        border: Border.all(
+          color: isSelected ? AppColors.accent : AppColors.border,
+          width: 2,
+        ),
       ),
       child: isSelected
           ? Center(
               child: Container(
                 width: 10,
                 height: 10,
-                decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.accent),
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.accent,
+                ),
               ),
             )
           : null,
@@ -351,17 +480,26 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           onPressed: _isPlacingOrder ? null : _placeOrder,
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.textDark,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(26),
+            ),
           ),
           child: _isPlacingOrder
               ? const SizedBox(
                   height: 22,
                   width: 22,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
                 )
               : const Text(
                   AppString.placeAnOrder,
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white),
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
                 ),
         ),
       ),

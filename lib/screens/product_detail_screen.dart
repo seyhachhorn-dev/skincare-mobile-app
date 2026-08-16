@@ -5,6 +5,7 @@ import 'package:skincare_app/constant/app_string.dart';
 import 'package:skincare_app/model/product.dart';
 import 'package:skincare_app/services/cart_service.dart';
 import 'package:skincare_app/services/favorites_service.dart';
+import 'package:skincare_app/utils/money.dart';
 import 'package:skincare_app/widgets/app_snackbar.dart';
 import 'package:skincare_app/widgets/svg_icon.dart';
 
@@ -58,7 +59,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           controller: _imageController,
           itemCount: images.length,
           onPageChanged: (index) => setState(() => _imageIndex = index),
-          itemBuilder: (context, index) => Image(image: images[index], fit: BoxFit.cover),
+          itemBuilder: (context, index) =>
+              Image(image: images[index], fit: BoxFit.cover),
         ),
         Positioned(
           top: MediaQuery.of(context).padding.top + 12,
@@ -82,7 +84,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   width: isActive ? 16 : 6,
                   height: 6,
                   decoration: BoxDecoration(
-                    color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.5),
+                    color: isActive
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(3),
                   ),
                 );
@@ -93,7 +97,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
-  Widget _buildCircleButton({required IconData icon, required VoidCallback onTap}) {
+  Widget _buildCircleButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
     return InkWell(
       onTap: onTap,
       customBorder: const CircleBorder(),
@@ -117,7 +124,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         boxShadow: [
-          BoxShadow(color: Colors.black12, blurRadius: 16, offset: Offset(0, -4)),
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 16,
+            offset: Offset(0, -4),
+          ),
         ],
       ),
       child: SafeArea(
@@ -173,7 +184,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             ),
             const SizedBox(width: 12),
             Text(
-              "\$${product.price}",
+              Money.usd(product.price),
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
@@ -185,7 +196,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         const SizedBox(height: 18),
         Row(
           children: [
-            if (product.size.isNotEmpty) _buildLabeledValue(AppString.size, product.size),
+            if (product.size.isNotEmpty)
+              _buildLabeledValue(AppString.size, product.size),
             const SizedBox(width: 40),
             _buildQuantityStepper(),
           ],
@@ -216,12 +228,20 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       children: [
         Text(
           label.toUpperCase(),
-          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textGrey),
+          style: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textGrey,
+          ),
         ),
         const SizedBox(height: 6),
         Text(
           value,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textDark),
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textDark,
+          ),
         ),
       ],
     );
@@ -233,7 +253,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       children: [
         Text(
           AppString.qty.toUpperCase(),
-          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textGrey),
+          style: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textGrey,
+          ),
         ),
         const SizedBox(height: 4),
         Row(
@@ -246,7 +270,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               child: Text(
                 "$_quantity",
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textDark),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textDark,
+                ),
               ),
             ),
             _buildStepperButton(Icons.add, () => setState(() => _quantity++)),
@@ -263,7 +291,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       child: Container(
         width: 22,
         height: 22,
-        decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.grey.shade100),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.grey.shade100,
+        ),
         child: Icon(icon, size: 14, color: AppColors.textDark),
       ),
     );
@@ -287,16 +318,28 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textDark),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textDark,
+                  ),
                 ),
-                Icon(expanded ? Icons.remove : Icons.add, size: 18, color: AppColors.textDark),
+                Icon(
+                  expanded ? Icons.remove : Icons.add,
+                  size: 18,
+                  color: AppColors.textDark,
+                ),
               ],
             ),
             if (expanded) ...[
               const SizedBox(height: 10),
               Text(
                 content,
-                style: const TextStyle(fontSize: 13, color: AppColors.textGrey, height: 1.5),
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textGrey,
+                  height: 1.5,
+                ),
               ),
             ],
           ],
@@ -333,7 +376,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             height: 40,
             child: ElevatedButton.icon(
               onPressed: () async {
-                final added = await CartService.instance.addToCart(widget.product, quantity: _quantity);
+                final added = await CartService.instance.addToCart(
+                  widget.product,
+                  quantity: _quantity,
+                );
                 if (!mounted) return;
                 if (added) {
                   AppSnackBar.success(
@@ -352,12 +398,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryLight,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(26),
+                ),
               ),
               icon: SvgIcon(AppIcons.bag, color: Colors.white, size: 18),
               label: const Text(
                 AppString.addToBasket,
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white),
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),

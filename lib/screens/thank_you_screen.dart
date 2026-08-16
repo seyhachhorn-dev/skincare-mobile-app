@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:skincare_app/constant/app_colors.dart';
 import 'package:skincare_app/constant/app_string.dart';
 import 'package:skincare_app/model/order.dart';
+import 'package:skincare_app/utils/money.dart';
 
 class ThankYouScreen extends StatefulWidget {
   final Order order;
@@ -22,40 +23,70 @@ class _ThankYouScreenState extends State<ThankYouScreen> {
           child: Column(
             children: [
               const SizedBox(height: 24),
-              const Icon(Icons.spa_outlined, size: 28, color: AppColors.textDark),
+              const Icon(
+                Icons.spa_outlined,
+                size: 28,
+                color: AppColors.textDark,
+              ),
               const Spacer(),
               _buildCheckBadge(),
               const SizedBox(height: 28),
               const Text(
                 AppString.thankYouTitle,
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.success, height: 1.3),
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.success,
+                  height: 1.3,
+                ),
               ),
               const SizedBox(height: 10),
               Text(
                 "Your order #${widget.order.orderNumber} is confirmed and in processing.",
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 13, color: AppColors.textGrey, height: 1.4),
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textGrey,
+                  height: 1.4,
+                ),
               ),
               const SizedBox(height: 20),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(30)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(30),
+                ),
                 child: Text(
                   "You have earned ${widget.order.pointsEarned} points!",
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textDark),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textDark,
+                  ),
                 ),
               ),
               const Spacer(),
               RichText(
                 textAlign: TextAlign.center,
                 text: TextSpan(
-                  style: const TextStyle(fontSize: 12, color: AppColors.textGrey, height: 1.5),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textGrey,
+                    height: 1.5,
+                  ),
                   children: [
                     const TextSpan(text: AppString.needAssistance),
                     TextSpan(
                       text: AppString.support,
-                      style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.textDark),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textDark,
+                      ),
                     ),
                   ],
                 ),
@@ -83,12 +114,18 @@ class _ThankYouScreenState extends State<ThankYouScreen> {
           Container(
             width: 130,
             height: 130,
-            decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.success.withValues(alpha: 0.08)),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.success.withValues(alpha: 0.08),
+            ),
           ),
           Container(
             width: 92,
             height: 92,
-            decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.success.withValues(alpha: 0.14)),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.success.withValues(alpha: 0.14),
+            ),
           ),
           Container(
             width: 60,
@@ -112,11 +149,13 @@ class _ThankYouScreenState extends State<ThankYouScreen> {
         onPressed: () => showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
             title: Text("Order #${widget.order.orderNumber}"),
             content: Text(
               "${widget.order.itemCount} item${widget.order.itemCount == 1 ? '' : 's'} · "
-              "\$${widget.order.total}.00 USD\nYou earned ${widget.order.pointsEarned} points on this order.",
+              "${Money.usd(widget.order.total)}\nYou earned ${widget.order.pointsEarned} points on this order.",
             ),
             actions: [
               TextButton(
@@ -128,11 +167,17 @@ class _ThankYouScreenState extends State<ThankYouScreen> {
         ),
         style: OutlinedButton.styleFrom(
           side: const BorderSide(color: AppColors.border),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(26),
+          ),
         ),
         child: const Text(
           AppString.orderDetailsBtn,
-          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textDark),
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textDark,
+          ),
         ),
       ),
     );
@@ -143,14 +188,24 @@ class _ThankYouScreenState extends State<ThankYouScreen> {
       width: double.infinity,
       height: 52,
       child: ElevatedButton(
-        onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false),
+        onPressed: () => Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/home',
+          (route) => false,
+        ),
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.textDark,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(26),
+          ),
         ),
         child: const Text(
           AppString.doneBtn,
-          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white),
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
         ),
       ),
     );

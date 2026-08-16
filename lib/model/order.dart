@@ -68,7 +68,7 @@ class Order {
       total: json['total'] ?? 0,
       pointsEarned: json['points_earned'] ?? 0,
       paymentMethod: json['payment_method'] ?? '',
-      paymentStatus: json['payment_status'] ?? 'paid',
+      paymentStatus: json['payment_status'] ?? 'pending',
       shippingMethod: json['shipping_method'] ?? '',
       itemCount: json['item_count'] ?? 0,
       date: DateTime.tryParse(json['date'] ?? '') ?? DateTime.now(),

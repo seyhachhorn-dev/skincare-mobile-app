@@ -4,6 +4,7 @@ import 'package:skincare_app/constant/app_string.dart';
 import 'package:skincare_app/model/cart_item.dart';
 import 'package:skincare_app/screens/checkout_screen.dart';
 import 'package:skincare_app/services/cart_service.dart';
+import 'package:skincare_app/utils/money.dart';
 import 'package:skincare_app/widgets/app_bottom_nav.dart';
 
 class CartScreen extends StatefulWidget {
@@ -43,11 +44,17 @@ class _CartScreenState extends State<CartScreen> {
                     children: [
                       Expanded(
                         child: ListView.separated(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 8,
+                          ),
                           itemCount: items.length,
-                          separatorBuilder: (context, index) =>
-                              const Divider(height: 24, color: AppColors.border),
-                          itemBuilder: (context, index) => _buildCartRow(items[index]),
+                          separatorBuilder: (context, index) => const Divider(
+                            height: 24,
+                            color: AppColors.border,
+                          ),
+                          itemBuilder: (context, index) =>
+                              _buildCartRow(items[index]),
                         ),
                       ),
                       _buildCouponField(),
@@ -95,7 +102,11 @@ class _CartScreenState extends State<CartScreen> {
             child: Text(
               AppString.shoppingCart,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textDark),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textDark,
+              ),
             ),
           ),
           const SizedBox(width: 48),
@@ -112,11 +123,19 @@ class _CartScreenState extends State<CartScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.shopping_bag_outlined, size: 56, color: Colors.grey.shade300),
+            Icon(
+              Icons.shopping_bag_outlined,
+              size: 56,
+              color: Colors.grey.shade300,
+            ),
             const SizedBox(height: 16),
             const Text(
               AppString.emptyCart,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textDark,
+              ),
             ),
             const SizedBox(height: 6),
             const Text(
@@ -139,7 +158,10 @@ class _CartScreenState extends State<CartScreen> {
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        decoration: BoxDecoration(color: AppColors.error, borderRadius: BorderRadius.circular(12)),
+        decoration: BoxDecoration(
+          color: AppColors.error,
+          borderRadius: BorderRadius.circular(12),
+        ),
         child: const Icon(Icons.delete_outline, color: Colors.white),
       ),
       child: Row(
@@ -147,7 +169,12 @@ class _CartScreenState extends State<CartScreen> {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
-            child: Image(image: item.product.imageProvider, width: 64, height: 64, fit: BoxFit.cover),
+            child: Image(
+              image: item.product.imageProvider,
+              width: 64,
+              height: 64,
+              fit: BoxFit.cover,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -162,26 +189,44 @@ class _CartScreenState extends State<CartScreen> {
                         item.product.name,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textDark),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textDark,
+                        ),
                       ),
                     ),
                     GestureDetector(
                       onTap: () => CartService.instance.removeItem(item),
-                      child: const Icon(Icons.close, size: 18, color: AppColors.textGrey),
+                      child: const Icon(
+                        Icons.close,
+                        size: 18,
+                        color: AppColors.textGrey,
+                      ),
                     ),
                   ],
                 ),
                 if (item.product.size.isNotEmpty) ...[
                   const SizedBox(height: 2),
-                  Text(item.product.size, style: const TextStyle(fontSize: 12, color: AppColors.textGrey)),
+                  Text(
+                    item.product.size,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textGrey,
+                    ),
+                  ),
                 ],
                 const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      "\$${item.product.price}.00 USD",
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textDark),
+                      Money.usd(item.product.price),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textDark,
+                      ),
                     ),
                     _buildQtyStepper(item),
                   ],
@@ -217,7 +262,11 @@ class _CartScreenState extends State<CartScreen> {
             child: Text(
               "${item.quantity}",
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textDark),
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textDark,
+              ),
             ),
           ),
           InkWell(
@@ -240,7 +289,10 @@ class _CartScreenState extends State<CartScreen> {
       child: TextField(
         decoration: InputDecoration(
           hintText: AppString.addCouponCode,
-          prefixIcon: const Icon(Icons.confirmation_number_outlined, color: AppColors.textGrey),
+          prefixIcon: const Icon(
+            Icons.confirmation_number_outlined,
+            color: AppColors.textGrey,
+          ),
           filled: true,
           fillColor: Colors.grey.shade100,
           border: OutlineInputBorder(
@@ -269,12 +321,19 @@ class _CartScreenState extends State<CartScreen> {
                 children: [
                   const Text(
                     AppString.total,
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textDark),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textDark,
+                    ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     "Order and get $points points",
-                    style: const TextStyle(fontSize: 12, color: AppColors.textGrey),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textGrey,
+                    ),
                   ),
                 ],
               ),
@@ -282,8 +341,12 @@ class _CartScreenState extends State<CartScreen> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    "\$$subtotal.00 USD",
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textDark),
+                    Money.usd(subtotal),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textDark,
+                    ),
                   ),
                   const SizedBox(height: 2),
                   const Text(
@@ -305,11 +368,17 @@ class _CartScreenState extends State<CartScreen> {
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.textDark,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(26),
+                ),
               ),
               child: const Text(
                 AppString.proceedToCheckout,
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white),
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),

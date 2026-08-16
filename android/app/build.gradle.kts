@@ -19,6 +19,7 @@ android {
         applicationId = "com.example.skincare_app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
+        // flutter_stripe requires Android API 21 or later.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
